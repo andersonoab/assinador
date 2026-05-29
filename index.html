@@ -2,12 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.ipify.org; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none';">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <meta name="robots" content="noindex,nofollow">
-<title>Assinador Eletrônico de Documentos</title>
+<title>Assinador Eletrônico</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&family=Caveat:wght@600&display=swap" rel="stylesheet">
@@ -15,235 +15,938 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  :root{--primary:#0083CA;--primary-dark:#003C64;--accent:#7D0041;--text:#333;--muted:#646464;--border:#CCC;--bg:#FFF;--bg-soft:#F5F7FA;--ok:#2E7D32;--warn:#E65100;--danger:#C62828;--lgpd:#4A148C}
-  *{box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg-soft);margin:0;line-height:1.5}
-  header{background:var(--primary);color:#fff;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
-  header h1{margin:0;font-size:1.25rem;font-weight:600;letter-spacing:.3px}
-  header .version{font-size:.75rem;opacity:.8}
-  #lgpd-banner{background:var(--lgpd);color:#fff;padding:12px 20px;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:16px}
-  #lgpd-banner strong{display:block;margin-bottom:2px}
-  #lgpd-banner a{color:#fff;text-decoration:underline;cursor:pointer}
-  #lgpd-banner button{background:#fff;color:var(--lgpd);border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:600;font-size:.8rem;white-space:nowrap;font-family:inherit}
-  main{max-width:1040px;margin:24px auto;padding:0 16px 48px}
-  .card{background:#fff;border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:20px}
-  .card h2{margin:0 0 16px;font-size:1.05rem;color:var(--primary-dark);font-weight:600;border-bottom:2px solid var(--primary);padding-bottom:8px}
-  .step-num{display:inline-block;width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:.85rem;margin-right:8px}
-  .dropzone{border:2px dashed var(--border);border-radius:6px;padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:all .2s}
-  .dropzone:hover,.dropzone.dragover{border-color:var(--primary);background:#F0F7FC;color:var(--primary-dark)}
-  .dropzone.has-file{border-style:solid;border-color:var(--ok);background:#F1F8F2;color:var(--ok)}
-  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}
-  .form-row.full{grid-template-columns:1fr}
-  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px;font-weight:500}
-  input[type=text],input[type=email],input[type=tel]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:4px;font-size:.95rem;font-family:inherit;transition:border-color .15s}
-  input:focus{outline:none;border-color:var(--primary)}
-  .canvas-wrap{border:1px solid var(--border);border-radius:4px;background:#fff;position:relative;height:180px;overflow:hidden}
-  #signature-canvas{display:block;width:100%;height:100%}
-  .canvas-line{position:absolute;bottom:30px;left:30px;right:30px;height:1px;background:var(--border);pointer-events:none}
-  .canvas-hint{position:absolute;bottom:8px;left:30px;font-size:.75rem;color:var(--muted);pointer-events:none}
-  .style-selector{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-  .style-option{flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:4px;padding:10px 8px;cursor:pointer;text-align:center;background:#fff;transition:all .15s}
-  .style-option:hover{border-color:var(--primary)}
-  .style-option.active{border-color:var(--primary);background:#F0F7FC}
-  .style-option .preview{font-size:1.6rem;color:var(--primary-dark);line-height:1.2;pointer-events:none}
-  .style-option .name{font-size:.7rem;color:var(--muted);margin-top:2px;pointer-events:none}
-  .style-option:nth-child(1) .preview{font-family:"Dancing Script",cursive}
-  .style-option:nth-child(2) .preview{font-family:"Great Vibes",cursive}
-  .style-option:nth-child(3) .preview{font-family:"Caveat",cursive}
-  .btn{background:var(--primary);color:#fff;border:none;padding:11px 22px;border-radius:4px;cursor:pointer;font-size:.95rem;font-weight:500;font-family:inherit;transition:background .15s}
-  .btn:hover:not(:disabled){background:var(--primary-dark)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:7px 14px;font-size:.85rem;border-radius:4px;cursor:pointer;font-family:inherit}
-  .btn-ghost:hover{background:var(--bg-soft);color:var(--text)}
-  .accept-box{background:var(--bg-soft);border-left:3px solid var(--primary);padding:14px 16px;margin:12px 0;font-size:.85rem;color:var(--text);max-height:240px;overflow-y:auto}
-  .accept-box.lgpd{border-left-color:var(--lgpd);background:#F3E5F5}
-  .accept-box strong{color:var(--primary-dark);display:block;margin-bottom:6px}
-  .accept-box.lgpd strong{color:var(--lgpd)}
-  .checkbox-wrap{display:flex;align-items:flex-start;gap:10px;margin-top:14px}
-  .checkbox-wrap input{margin-top:3px;cursor:pointer}
-  .checkbox-wrap label{font-size:.9rem;color:var(--text);cursor:pointer}
-  .actions{display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid var(--border);margin-top:8px;gap:12px;flex-wrap:wrap}
-  .status{font-size:.9rem;padding:12px 14px;border-radius:4px;margin-top:14px;display:none}
-  .status.show{display:block}
-  .status.success{background:#E8F5E9;color:var(--ok);border-left:3px solid var(--ok)}
-  .status.error{background:#FFEBEE;color:var(--danger);border-left:3px solid var(--danger)}
-  .status.info{background:#E3F2FD;color:var(--primary-dark);border-left:3px solid var(--primary)}
-  .meta-info{font-size:.8rem;color:var(--muted);margin-top:4px}
-  .legal{margin-top:24px;padding:16px 20px;background:#FAFAFA;border:1px solid var(--border);border-radius:4px;font-size:.8rem;color:var(--muted);line-height:1.6}
-  .legal strong{color:var(--text)}
-  .toolbar{text-align:right;margin-bottom:12px;font-size:.85rem}
-  .toolbar a{color:var(--primary);text-decoration:none;cursor:pointer}
-  .toolbar a:hover{text-decoration:underline}
-  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:20px}
-  .modal.show{display:flex}
-  .modal-content{background:#fff;border-radius:6px;width:100%;max-width:720px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
-  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-  .modal-header h3{margin:0;color:var(--primary-dark)}
-  .modal-body{padding:16px 20px;overflow-y:auto}
-  .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-  table{width:100%;border-collapse:collapse;font-size:.85rem}
-  table th,table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
-  table th{background:var(--bg-soft);color:var(--muted);font-weight:600}
-  .empty-history{text-align:center;color:var(--muted);padding:24px;font-size:.9rem}
-  .hash-preview{font-family:ui-monospace,"SF Mono",monospace;font-size:.78rem;color:var(--muted);word-break:break-all}
-  /* POSICIONADOR */
-  .placeholder-pos{padding:40px;text-align:center;color:var(--muted);background:var(--bg-soft);border:1px dashed var(--border);border-radius:4px;font-size:.9rem}
-  .pos-controls{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-soft);border-radius:4px;margin-bottom:10px;flex-wrap:wrap}
-  .pos-controls button{background:#fff;border:1px solid var(--border);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.85rem}
-  .pos-controls button:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
-  .pos-controls button:disabled{opacity:.4;cursor:not-allowed}
-  .pos-controls .info{flex:1;font-size:.85rem;color:var(--muted)}
-  .pos-controls input[type=range]{flex:1;min-width:120px;max-width:240px}
-  .pdf-wrap{background:#525659;padding:20px;border-radius:4px;text-align:center;max-height:600px;overflow:auto;position:relative}
-  .pdf-canvas-container{display:inline-block;position:relative;line-height:0;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-  #pdf-canvas{display:block;background:#fff}
-  .sig-overlay{position:absolute;cursor:grab;border:2px dashed var(--primary);background:rgba(255,255,255,.7);touch-action:none;user-select:none}
-  .sig-overlay.dragging{cursor:grabbing;border-style:solid;border-color:var(--accent)}
-  .sig-overlay img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
-  .sig-overlay .resize-handle{position:absolute;right:-8px;bottom:-8px;width:18px;height:18px;background:var(--primary);border:2px solid #fff;border-radius:50%;cursor:nwse-resize;touch-action:none}
-  .sig-overlay .label{position:absolute;top:-22px;left:0;background:var(--primary);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600;letter-spacing:.5px}
-  @media (max-width:640px){.form-row{grid-template-columns:1fr}main{padding:0 12px 32px}.card{padding:18px}header{padding:16px 20px}header h1{font-size:1.05rem}#lgpd-banner{flex-direction:column;align-items:flex-start}.pos-controls{flex-direction:column;align-items:stretch}}
+/* ===== TOKENS ===== */
+:root {
+  --primary: #0083CA;
+  --primary-dark: #003C64;
+  --accent: #7D0041;
+  --text: #1A1A1A;
+  --muted: #666;
+  --border: #DDD;
+  --bg: #FFF;
+  --bg-soft: #F4F6F9;
+  --ok: #1B7A36;
+  --ok-bg: #EAF4EE;
+  --warn: #C45800;
+  --danger: #B71C1C;
+  --lgpd: #4A148C;
+  --lgpd-bg: #F3E5F5;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 8px rgba(0,0,0,.10);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,.14);
+}
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg-soft);
+  margin: 0;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== HEADER ===== */
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+header h1 { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: .2px; }
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.header-link {
+  color: rgba(255,255,255,.85);
+  font-size: .78rem;
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.header-link:hover { background: rgba(255,255,255,.15); }
+
+/* ===== LGPD BANNER ===== */
+#lgpd-banner {
+  background: var(--lgpd);
+  color: #fff;
+  padding: 10px 16px;
+  font-size: .8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+#lgpd-banner a { color: rgba(255,255,255,.85); text-decoration: underline; cursor: pointer; }
+#lgpd-banner button {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.4);
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: .78rem;
+  white-space: nowrap;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+/* ===== MAIN ===== */
+main { max-width: 680px; margin: 0 auto; padding: 16px 14px 120px; }
+
+/* ===== PROGRESS BAR ===== */
+.progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+.prog-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+.prog-step::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+.prog-step:last-child::after { display: none; }
+.prog-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  transition: background .3s, color .3s;
+  flex-shrink: 0;
+}
+.prog-step.done .prog-dot { background: var(--ok); color: #fff; }
+.prog-step.done::after { background: var(--ok); }
+.prog-step.active .prog-dot { background: var(--primary); color: #fff; box-shadow: 0 0 0 4px rgba(0,131,202,.2); }
+.prog-label { font-size: .68rem; color: var(--muted); margin-top: 4px; text-align: center; }
+.prog-step.active .prog-label { color: var(--primary); font-weight: 600; }
+.prog-step.done .prog-label { color: var(--ok); }
+
+/* ===== CARDS (seções) ===== */
+.section-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow .2s;
+}
+.section-card.active { box-shadow: var(--shadow-lg); border-color: var(--primary); }
+.section-header {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.section-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg-soft);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  transition: background .2s, color .2s;
+}
+.section-card.active .section-num { background: var(--primary); color: #fff; }
+.section-card.done .section-num { background: var(--ok); color: #fff; }
+.section-title { font-size: .95rem; font-weight: 600; color: var(--text); flex: 1; }
+.section-badge {
+  font-size: .72rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-ok { background: var(--ok-bg); color: var(--ok); }
+.badge-pending { background: var(--bg-soft); color: var(--muted); }
+.section-chevron { color: var(--muted); font-size: .85rem; transition: transform .2s; flex-shrink: 0; }
+.section-card.open .section-chevron { transform: rotate(180deg); }
+.section-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--bg-soft); }
+.section-card.open .section-body { display: block; }
+
+/* ===== UPLOAD / DROPZONE ===== */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  margin-top: 12px;
+}
+.dropzone:active { background: #F0F7FC; }
+.dropzone.dragover { border-color: var(--primary); background: #F0F7FC; color: var(--primary-dark); }
+.dropzone.has-file { border-style: solid; border-color: var(--ok); background: var(--ok-bg); color: var(--ok); }
+.dropzone-icon { font-size: 2rem; margin-bottom: 8px; display: block; }
+.dropzone strong { display: block; font-size: .95rem; }
+.dropzone span { font-size: .82rem; }
+
+/* MINIATURA DO PDF */
+#pdf-thumb-wrap {
+  display: none;
+  margin-top: 12px;
+  background: #525659;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-align: center;
+  padding: 10px;
+}
+#pdf-thumb-wrap.show { display: block; }
+#pdf-thumb-canvas { max-width: 100%; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.thumb-label { color: rgba(255,255,255,.7); font-size: .75rem; margin-top: 6px; }
+
+.meta-info { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+.hash-preview { font-family: ui-monospace,"SF Mono",monospace; font-size: .72rem; word-break: break-all; }
+
+/* ===== FORMULÁRIO ===== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.form-grid.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: .8rem; color: var(--muted); font-weight: 500; }
+.field input {
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.field input:focus { outline: none; border-color: var(--primary); }
+.field input.valid { border-color: var(--ok); }
+.field input.error { border-color: var(--danger); }
+.field-hint { font-size: .72rem; color: var(--danger); display: none; }
+.field.has-error .field-hint { display: block; }
+@media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* ===== ASSINATURA ===== */
+.sig-input-wrap { margin-top: 12px; position: relative; }
+.sig-input-wrap input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: inherit;
+}
+.sig-input-wrap input:focus { outline: none; border-color: var(--primary); }
+
+.style-tabs { display: flex; gap: 8px; margin-top: 12px; }
+.style-tab {
+  flex: 1;
+  padding: 10px 4px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+  background: #fff;
+  transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.style-tab:active { transform: scale(.97); }
+.style-tab.active { border-color: var(--primary); background: #EAF4FC; }
+.style-tab .tab-preview { font-size: 1.4rem; color: var(--primary-dark); line-height: 1.2; pointer-events: none; }
+.style-tab .tab-label { font-size: .65rem; color: var(--muted); margin-top: 2px; pointer-events: none; }
+.style-tab:nth-child(1) .tab-preview { font-family: "Dancing Script", cursive; }
+.style-tab:nth-child(2) .tab-preview { font-family: "Great Vibes", cursive; }
+.style-tab:nth-child(3) .tab-preview { font-family: "Caveat", cursive; }
+
+.canvas-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  position: relative;
+  height: 100px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+#signature-canvas { display: block; width: 100%; height: 100%; }
+.canvas-line { position: absolute; bottom: 22px; left: 20px; right: 20px; height: 1px; background: var(--border); pointer-events: none; }
+.canvas-hint { position: absolute; bottom: 6px; left: 20px; font-size: .68rem; color: var(--muted); pointer-events: none; }
+
+/* ===== POSICIONADOR ===== */
+.pos-hint { font-size: .82rem; color: var(--muted); margin-top: 12px; margin-bottom: 8px; }
+.pos-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.pos-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: .82rem;
+  font-family: inherit;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.pos-btn:active { background: var(--bg-soft); }
+.pos-btn.active-page { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pos-btn:disabled { opacity: .4; cursor: not-allowed; }
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.size-row label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+.size-row input[type=range] { flex: 1; accent-color: var(--primary); }
+.pdf-viewer {
+  background: #3A3A3A;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+.pdf-scroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 55vh;
+  text-align: center;
+  padding: 12px;
+}
+.pdf-canvas-container { display: inline-block; position: relative; line-height: 0; box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+#pdf-canvas { display: block; max-width: 100%; height: auto; background: #fff; }
+.sig-overlay {
+  position: absolute;
+  cursor: grab;
+  border: 2px dashed var(--primary);
+  background: rgba(255,255,255,.65);
+  touch-action: none;
+  user-select: none;
+}
+.sig-overlay.dragging { cursor: grabbing; border-style: solid; border-color: var(--accent); }
+.sig-overlay img { width: 100%; height: 100%; display: block; pointer-events: none; -webkit-user-drag: none; }
+.sig-overlay .resize-handle {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 22px;
+  height: 22px;
+  background: var(--primary);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.sig-overlay .label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: var(--primary);
+  color: #fff;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+.pdf-page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,.35);
+}
+.pdf-page-nav button {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.25);
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: .82rem;
+}
+.pdf-page-nav button:disabled { opacity: .3; cursor: not-allowed; }
+.page-info { color: rgba(255,255,255,.85); font-size: .82rem; }
+.pos-shortcuts { display: flex; gap: 8px; margin-top: 8px; }
+.pos-shortcut {
+  flex: 1;
+  padding: 9px 8px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: .8rem;
+  font-family: inherit;
+  text-align: center;
+  transition: all .15s;
+}
+.pos-shortcut:active { background: #EAF4FC; border-color: var(--primary); }
+
+/* ===== ACEITES ===== */
+.aceite-bloco { margin-top: 14px; }
+.aceite-resumo {
+  background: var(--bg-soft);
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 14px;
+  font-size: .82rem;
+  color: var(--text);
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.aceite-resumo.lgpd { border-left-color: var(--lgpd); background: var(--lgpd-bg); }
+.aceite-resumo strong { display: block; margin-bottom: 3px; font-size: .85rem; }
+.aceite-resumo.lgpd strong { color: var(--lgpd); }
+.aceite-expandido {
+  display: none;
+  font-size: .78rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.aceite-expandido.show { display: block; }
+.aceite-ver-mais { color: var(--primary); font-size: .75rem; text-decoration: underline; cursor: pointer; background: none; border: none; font-family: inherit; padding: 0; }
+.checkbox-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.checkbox-wrap.checked { border-color: var(--ok); background: var(--ok-bg); }
+.checkbox-wrap input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; cursor: pointer; accent-color: var(--ok); }
+.checkbox-wrap label { font-size: .85rem; color: var(--text); cursor: pointer; line-height: 1.4; }
+
+/* ===== STATUS ===== */
+.status { font-size: .88rem; padding: 10px 14px; border-radius: var(--radius-sm); margin-top: 12px; display: none; }
+.status.show { display: block; }
+.status.success { background: var(--ok-bg); color: var(--ok); border-left: 3px solid var(--ok); }
+.status.error { background: #FFEBEE; color: var(--danger); border-left: 3px solid var(--danger); }
+.status.info { background: #E3F2FD; color: var(--primary-dark); border-left: 3px solid var(--primary); }
+
+/* ===== BOTAO FLUTUANTE ===== */
+.fab-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px;
+  background: linear-gradient(to top, #fff 70%, transparent);
+  z-index: 40;
+}
+#btn-assinar {
+  width: 100%;
+  padding: 15px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 4px 16px rgba(0,131,202,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#btn-assinar:not(:disabled):active { transform: scale(.98); }
+#btn-assinar:disabled { background: #B0C4D8; box-shadow: none; cursor: not-allowed; }
+.btn-icon { font-size: 1.1rem; }
+.btn-progress { font-size: .78rem; opacity: .85; margin-top: 1px; }
+
+/* ===== LEGAL ===== */
+.legal {
+  font-size: .75rem;
+  color: var(--muted);
+  line-height: 1.6;
+  padding: 14px 16px;
+  background: #FAFAFA;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+}
+
+/* ===== MODAIS ===== */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100; align-items: flex-end; justify-content: center; padding: 0; }
+.modal.show { display: flex; }
+.modal-content {
+  background: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 10px auto 0; }
+.modal-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { margin: 0; font-size: 1rem; color: var(--primary-dark); }
+.modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  font-size: .88rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-ghost:hover { background: var(--bg-soft); }
+table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+table th, table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; font-size: .78rem; }
+.empty-history { text-align: center; color: var(--muted); padding: 28px; font-size: .9rem; }
+.hash-preview2 { font-family: ui-monospace,"SF Mono",monospace; font-size: .7rem; color: var(--muted); word-break: break-all; }
+
+/* placeholder do posicionador */
+.placeholder-pos { padding: 28px 16px; text-align: center; color: var(--muted); background: var(--bg-soft); border: 1px dashed var(--border); border-radius: var(--radius-sm); font-size: .85rem; margin-top: 12px; }
+
+/* ===== POSICIONADOR DOCUSIGN-STYLE ===== */
+.pos-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 24px;
+  font-size: .88rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  transition: background .2s;
+}
+.pos-chip-tap { background: #E3F2FD; color: var(--primary-dark); border: 1.5px solid var(--primary); }
+.pos-chip-done { background: var(--ok-bg); color: var(--ok); border: 1.5px solid var(--ok); }
+.pos-chip span:first-child { font-size: 1.1rem; flex-shrink: 0; }
+.pos-toolbar { margin-bottom: 8px; }
+.pos-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 10px;
+  flex-wrap: wrap;
+}
+.ptb-btn {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 50%; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: .9rem; flex-shrink: 0; transition: all .15s;
+}
+.ptb-btn:disabled { opacity: .35; cursor: not-allowed; }
+.ptb-btn:not(:disabled):active { background: var(--bg-soft); }
+.ptb-clear { color: var(--danger); border-color: var(--danger); }
+.ptb-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+.ptb-label { font-size: .75rem; color: var(--muted); white-space: nowrap; }
+.ptb-range { flex: 1; min-width: 60px; max-width: 120px; accent-color: var(--primary); }
+.ds-viewer {
+  border-radius: var(--radius-sm); overflow: hidden;
+  background: #3C3C3C; position: relative; box-shadow: var(--shadow-lg);
+}
+.ds-scroll {
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  max-height: 60vh; display: flex; justify-content: center; padding: 16px;
+}
+.ds-page-container { position: relative; display: inline-block; line-height: 0; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
+#pdf-canvas { display: block; max-width: 100%; height: auto; background: #fff; }
+.ds-tap-layer {
+  position: absolute; inset: 0; cursor: crosshair; z-index: 5; background: transparent;
+}
+.ds-tap-layer.hidden { display: none; }
+.sig-overlay {
+  position: absolute; cursor: grab;
+  border: 2px dashed var(--primary); background: rgba(255,255,255,.5);
+  touch-action: none; user-select: none; z-index: 10; border-radius: 3px;
+}
+.sig-overlay.dragging { cursor: grabbing; border-style: solid; border-color: var(--accent); }
+.sig-overlay img { width: 100%; height: 100%; display: block; pointer-events: none; -webkit-user-drag: none; }
+.sig-overlay .resize-handle {
+  position: absolute; right: -10px; bottom: -10px;
+  width: 24px; height: 24px; background: var(--primary);
+  border: 2.5px solid #fff; border-radius: 50%; cursor: nwse-resize;
+  touch-action: none; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.sig-label-chip {
+  position: absolute; top: -24px; left: 0;
+  background: var(--primary); color: #fff; font-size: 10px;
+  padding: 3px 8px; border-radius: 10px; font-weight: 700;
+  white-space: nowrap; pointer-events: none;
+}
+.ds-page-nav {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,0,0,.65); border-radius: 20px; padding: 5px 14px;
+  z-index: 20; backdrop-filter: blur(4px);
+}
+.ds-nav-btn {
+  background: rgba(255,255,255,.2); color: #fff;
+  border: 1px solid rgba(255,255,255,.3); border-radius: 50%;
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: .9rem;
+}
+.ds-nav-btn:disabled { opacity: .3; cursor: not-allowed; }
+.ds-page-txt { color: rgba(255,255,255,.9); font-size: .8rem; white-space: nowrap; }
+.pos-chips-acao { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.chip-acao {
+  padding: 7px 14px; background: #fff; border: 1.5px solid var(--border);
+  border-radius: 20px; cursor: pointer; font-size: .82rem; font-family: inherit;
+  color: var(--primary-dark); transition: all .15s;
+}
+.chip-acao:active { background: #EAF4FC; border-color: var(--primary); }
+
+
+/* ===== DESKTOP ===== */
+@media (min-width: 640px) {
+  main { padding: 24px 20px 80px; }
+  .modal { align-items: center; padding: 20px; }
+  .modal-content { border-radius: var(--radius); max-height: 80vh; }
+  .modal-handle { display: none; }
+  .fab-wrap { position: static; background: none; padding: 0; margin-bottom: 32px; }
+  #btn-assinar { border-radius: var(--radius-sm); }
+  header h1 { font-size: 1.1rem; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Assinador Eletrônico de Documentos</h1>
-  <div class="version">v2.1</div>
+  <h1>Assinador Eletrônico</h1>
+  <div class="header-actions">
+    <a class="header-link" id="link-historico">Historico</a>
+    <a class="header-link" href="verificar.html">Verificar</a>
+  </div>
 </header>
 
 <div id="lgpd-banner">
-  <div>
-    <strong>Aviso de Tratamento de Dados Pessoais (LGPD)</strong>
-    Esta ferramenta coleta nome, CPF, celular, e-mail, cargo, endereço IP e dados do dispositivo para fins exclusivos de formalização da assinatura eletrônica. Veja a <a id="lgpd-details-link">descrição completa</a>.
-  </div>
-  <button id="lgpd-ack">Estou ciente</button>
+  <span>Esta ferramenta coleta dados pessoais para a assinatura. <a id="lgpd-details-link">Saiba mais</a></span>
+  <button id="lgpd-ack">Entendi</button>
 </div>
 
 <main>
 
-  <div class="toolbar">
-    <a id="link-historico">Histórico de assinaturas</a>
-    &nbsp;·&nbsp;
-    <a href="verificar.html">Validar um documento assinado</a>
-  </div>
-
-  <div class="card">
-    <h2><span class="step-num">1</span>Documento a ser assinado</h2>
-    <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
-    <div class="dropzone" id="dropzone">
-      <div id="dropzone-text">
-        <strong>Clique aqui ou arraste o PDF</strong><br>
-        <span style="font-size:.85rem;">Apenas arquivos .pdf válidos, tamanho máximo 20 MB</span>
-      </div>
+  <!-- PROGRESS -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="prog-step" id="prog-1">
+      <div class="prog-dot">1</div>
+      <div class="prog-label">Documento</div>
     </div>
-    <div id="pdf-info" class="meta-info" style="margin-top:10px;display:none;"></div>
-  </div>
-
-  <div class="card">
-    <h2><span class="step-num">2</span>Identificação do signatário</h2>
-    <div class="form-row">
-      <div><label for="nome">Nome completo *</label><input type="text" id="nome" maxlength="100" autocomplete="name" placeholder="João da Silva Souza"></div>
-      <div><label for="cpf">CPF *</label><input type="text" id="cpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00"></div>
+    <div class="prog-step" id="prog-2">
+      <div class="prog-dot">2</div>
+      <div class="prog-label">Dados</div>
     </div>
-    <div class="form-row">
-      <div><label for="celular">Celular *</label><input type="tel" id="celular" maxlength="15" inputmode="numeric" autocomplete="tel" placeholder="(11) 91234-5678"></div>
-      <div><label for="email">E-mail</label><input type="email" id="email" maxlength="100" autocomplete="email" placeholder="nome@empresa.com.br"></div>
+    <div class="prog-step" id="prog-3">
+      <div class="prog-dot">3</div>
+      <div class="prog-label">Assinar</div>
     </div>
-    <div class="form-row full">
-      <div><label for="cargo">Cargo / função</label><input type="text" id="cargo" maxlength="80" placeholder="Ex.: Analista de Atendimento"></div>
+    <div class="prog-step" id="prog-4">
+      <div class="prog-dot">4</div>
+      <div class="prog-label">Posicionar</div>
+    </div>
+    <div class="prog-step" id="prog-5">
+      <div class="prog-dot">5</div>
+      <div class="prog-label">Aceite</div>
     </div>
   </div>
 
-  <div class="card">
-    <h2><span class="step-num">3</span>Assinatura</h2>
-    <div class="meta-info" style="margin-bottom:8px;">Digite seu nome abaixo para gerar a assinatura em estilo cursivo. Escolha o estilo que prefere.</div>
-    <input type="text" id="sig-text" maxlength="60" placeholder="Digite seu nome para a assinatura" autocomplete="off">
-    <div class="style-selector" id="style-selector">
-      <div class="style-option active" data-font="Dancing Script"><div class="preview">João Silva</div><div class="name">Estilo 1 - Cursiva moderna</div></div>
-      <div class="style-option" data-font="Great Vibes"><div class="preview">João Silva</div><div class="name">Estilo 2 - Cursiva elegante</div></div>
-      <div class="style-option" data-font="Caveat"><div class="preview">João Silva</div><div class="name">Estilo 3 - Manuscrita</div></div>
+  <!-- PASSO 1: DOCUMENTO -->
+  <div class="section-card active open" id="sec-1">
+    <div class="section-header" id="sec-1-hdr">
+      <div class="section-num">1</div>
+      <div class="section-title">Documento PDF</div>
+      <span class="section-badge badge-pending" id="badge-1">Pendente</span>
+      <span class="section-chevron">&#8964;</span>
     </div>
-    <div style="margin-top:14px;">
-      <label style="margin-bottom:6px;">Pré-visualização da assinatura</label>
-      <div class="canvas-wrap">
-        <canvas id="signature-canvas"></canvas>
-        <div class="canvas-line"></div>
-        <div class="canvas-hint">Assinatura</div>
+    <div class="section-body">
+      <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
+      <div class="dropzone" id="dropzone">
+        <span class="dropzone-icon">&#128196;</span>
+        <strong>Toque para selecionar o PDF</strong>
+        <span>ou arraste aqui &bull; max. 20 MB</span>
       </div>
+      <div id="pdf-thumb-wrap">
+        <canvas id="pdf-thumb-canvas"></canvas>
+        <div class="thumb-label" id="pdf-thumb-label">Pagina 1</div>
+      </div>
+      <div id="pdf-info" class="meta-info" style="display:none;"></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2><span class="step-num">4</span>Posicionamento da assinatura</h2>
-    <div id="pos-placeholder" class="placeholder-pos">Carregue um PDF no passo 1 e gere a assinatura no passo 3 para posicionar.</div>
-    <div id="pos-area" style="display:none;">
-      <div class="pos-controls">
-        <button id="page-prev" type="button">&lsaquo; Página anterior</button>
-        <span class="info"><strong>Página <span id="page-current">1</span> de <span id="page-total">1</span></strong> &middot; arraste a assinatura para a posição desejada</span>
-        <button id="page-next" type="button">Próxima página &rsaquo;</button>
+  <!-- PASSO 2: IDENTIFICACAO -->
+  <div class="section-card" id="sec-2">
+    <div class="section-header" id="sec-2-hdr">
+      <div class="section-num">2</div>
+      <div class="section-title">Identificacao</div>
+      <span class="section-badge badge-pending" id="badge-2">Pendente</span>
+      <span class="section-chevron">&#8964;</span>
+    </div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="field" id="field-nome">
+          <label for="nome">Nome completo *</label>
+          <input type="text" id="nome" maxlength="100" autocomplete="name" placeholder="Joao da Silva Souza" inputmode="text">
+          <span class="field-hint" id="hint-nome">Informe nome e sobrenome, sem numeros</span>
+        </div>
+        <div class="field" id="field-cpf">
+          <label for="cpf">CPF *</label>
+          <input type="text" id="cpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00">
+          <span class="field-hint" id="hint-cpf">CPF invalido</span>
+        </div>
       </div>
-      <div class="pos-controls">
-        <label style="margin:0;">Tamanho:</label>
-        <input type="range" id="sig-size" min="0.10" max="0.60" step="0.01" value="0.30">
-        <button id="btn-centralizar" type="button">Centralizar</button>
-        <button id="btn-rodape" type="button">Mover ao rodapé</button>
+      <div class="form-grid">
+        <div class="field" id="field-celular">
+          <label for="celular">Celular *</label>
+          <input type="tel" id="celular" maxlength="15" inputmode="numeric" autocomplete="tel" placeholder="(11) 91234-5678">
+          <span class="field-hint" id="hint-cel">Celular invalido</span>
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" maxlength="100" autocomplete="email" placeholder="nome@empresa.com.br" inputmode="email">
+        </div>
       </div>
-      <div class="pdf-wrap">
-        <div class="pdf-canvas-container" id="pdf-canvas-container">
-          <canvas id="pdf-canvas"></canvas>
-          <div class="sig-overlay" id="sig-overlay">
-            <div class="label">Assinatura</div>
-            <img id="sig-overlay-img" alt="">
-            <div class="resize-handle" id="resize-handle"></div>
-          </div>
+      <div class="form-grid full">
+        <div class="field">
+          <label for="cargo">Cargo / funcao</label>
+          <input type="text" id="cargo" maxlength="80" placeholder="Ex.: Analista de Atendimento">
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2><span class="step-num">5</span>Consentimento e termo de aceite</h2>
-    <div class="accept-box lgpd">
-      <strong>Tratamento de dados pessoais (Lei 13.709/2018 - LGPD)</strong>
-      Ao assinar este documento, autorizo o tratamento dos seguintes dados pessoais: nome completo, CPF, número de celular, e-mail, cargo, endereço IP, dados do dispositivo (navegador, sistema operacional, resolução de tela, fuso horário) e imagem da assinatura digitalizada. Finalidade: formalização eletrônica de documento trabalhista, com produção de prova de autoria e integridade. Bases legais: cumprimento de obrigação legal e regulatória pelo controlador (art. 7º, II), execução de contrato (art. 7º, V) e exercício regular de direitos em processo (art. 7º, VI) da LGPD. Compartilhamento: os dados ficam embutidos no próprio PDF assinado, que pode ser compartilhado com a área de Recursos Humanos, com órgãos fiscalizadores e em processos administrativos ou judiciais. Retenção: prazo prescricional trabalhista (cinco anos durante o contrato e dois anos após a rescisão, conforme art. 7º, XXIX, CF/88). Direitos do titular: confirmação, acesso, correção, anonimização, portabilidade e eliminação, observadas as exceções legais, mediante solicitação ao Encarregado de Dados da organização.
+  <!-- PASSO 3: ASSINATURA -->
+  <div class="section-card" id="sec-3">
+    <div class="section-header" id="sec-3-hdr">
+      <div class="section-num">3</div>
+      <div class="section-title">Estilo da assinatura</div>
+      <span class="section-badge badge-pending" id="badge-3">Pendente</span>
+      <span class="section-chevron">&#8964;</span>
     </div>
-    <div class="checkbox-wrap"><input type="checkbox" id="aceite-lgpd"><label for="aceite-lgpd">Li, compreendi e autorizo expressamente o tratamento dos meus dados pessoais nos termos acima.</label></div>
-    <div class="accept-box" style="margin-top:18px;">
-      <strong>Declaração de Aceite de Assinatura Eletrônica</strong>
-      Declaro, para todos os fins de direito, que tomei conhecimento integral do conteúdo do documento PDF anexado nesta sessão e o assino eletronicamente, com plena ciência de que esta assinatura, embora não emitida por certificado ICP-Brasil, constitui assinatura eletrônica avançada nos termos do artigo 10, §2º, da MP 2.200-2/2001, com identificação inequívoca do signatário, integridade do documento garantida por função criptográfica de resumo (SHA-256) e registro de trilha de auditoria (data, hora, equipamento, IP). Reconheço a validade jurídica do presente ato e dispenso a formalização por meio físico.
+    <div class="section-body">
+      <div class="sig-input-wrap">
+        <input type="text" id="sig-text" maxlength="60" placeholder="Digite seu nome para a assinatura" autocomplete="off">
+      </div>
+      <div class="style-tabs" id="style-selector">
+        <div class="style-tab active" data-font="Dancing Script">
+          <div class="tab-preview">Joao</div>
+          <div class="tab-label">Cursiva</div>
+        </div>
+        <div class="style-tab" data-font="Great Vibes">
+          <div class="tab-preview">Joao</div>
+          <div class="tab-label">Elegante</div>
+        </div>
+        <div class="style-tab" data-font="Caveat">
+          <div class="tab-preview">Joao</div>
+          <div class="tab-label">Manuscrita</div>
+        </div>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="signature-canvas"></canvas>
+        <div class="canvas-line"></div>
+        <div class="canvas-hint">Previa da assinatura</div>
+      </div>
     </div>
-    <div class="checkbox-wrap"><input type="checkbox" id="aceite-assinatura"><label for="aceite-assinatura">Li, compreendi e aceito o termo acima. Declaro que sou a pessoa identificada no passo 2 e que assino voluntariamente este documento.</label></div>
   </div>
 
-  <div class="card">
-    <div class="actions">
-      <div class="meta-info">A assinatura visual será inserida na posição escolhida e uma <strong>página de certificado</strong> será adicionada como primeira página.</div>
-      <button class="btn" id="btn-assinar" disabled>Assinar e baixar PDF</button>
+  <!-- PASSO 4: POSICIONAMENTO DOCUSIGN-STYLE -->
+  <div class="section-card" id="sec-4">
+    <div class="section-header" id="sec-4-hdr">
+      <div class="section-num">4</div>
+      <div class="section-title">Posicionar assinatura</div>
+      <span class="section-badge badge-pending" id="badge-4">Pendente</span>
+      <span class="section-chevron">&#8964;</span>
     </div>
-    <div class="status" id="status"></div>
+    <div class="section-body">
+      <div id="pos-placeholder" class="placeholder-pos">Complete os passos 1 e 3 primeiro.</div>
+      <div id="pos-area" style="display:none;">
+
+        <!-- CHIP de instrucao / estado -->
+        <div id="pos-chip" class="pos-chip pos-chip-tap">
+          <span id="pos-chip-icon">&#128393;</span>
+          <span id="pos-chip-txt">Toque no documento onde quer assinar</span>
+        </div>
+
+        <!-- Controles de pagina e tamanho (compactos, aparecem depois de posicionar) -->
+        <div id="pos-toolbar" class="pos-toolbar" style="display:none;">
+          <div class="pos-toolbar-row">
+            <button class="ptb-btn" id="page-prev" type="button" disabled>&#8249;</button>
+            <span class="page-info">Pag. <span id="page-current">1</span>/<span id="page-total">1</span></span>
+            <button class="ptb-btn" id="page-next" type="button" disabled>&#8250;</button>
+            <div class="ptb-sep"></div>
+            <span class="ptb-label">Tam.:</span>
+            <input type="range" id="sig-size" min="0.10" max="0.55" step="0.01" value="0.28" class="ptb-range">
+            <div class="ptb-sep"></div>
+            <button class="ptb-btn" id="btn-rodape" type="button" title="Mover ao rodape">&#8964;</button>
+            <button class="ptb-btn ptb-clear" id="btn-limpar-pos" type="button" title="Remover assinatura">&#10005;</button>
+          </div>
+        </div>
+
+        <!-- Viewer do PDF -->
+        <div class="ds-viewer" id="ds-viewer">
+          <div class="ds-scroll" id="ds-scroll">
+            <div class="ds-page-container" id="pdf-canvas-container">
+              <canvas id="pdf-canvas"></canvas>
+              <!-- Overlay clicável quando sem assinatura -->
+              <div class="ds-tap-layer" id="ds-tap-layer"></div>
+              <!-- Assinatura posicionada -->
+              <div class="sig-overlay" id="sig-overlay" style="display:none;">
+                <div class="sig-label-chip">Assinatura &#8597;</div>
+                <img id="sig-overlay-img" alt="">
+                <div class="resize-handle" id="resize-handle"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Nav de pagina sobre o PDF -->
+          <div class="ds-page-nav" id="ds-page-nav" style="display:none;">
+            <button class="ds-nav-btn" id="ds-prev" type="button">&#8249;</button>
+            <span class="ds-page-txt">Pag. <span id="page-current-2">1</span> de <span id="page-total-2">1</span></span>
+            <button class="ds-nav-btn" id="ds-next" type="button">&#8250;</button>
+          </div>
+        </div>
+
+        <!-- Botao centralizar e rodape como chips (aparecem depois de posicionar) -->
+        <div id="pos-chips-acao" class="pos-chips-acao" style="display:none;">
+          <button class="chip-acao" id="btn-centralizar">Centralizar</button>
+          <button class="chip-acao" id="btn-rodape2">Mover ao rodape</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PASSO 5: ACEITE -->
+  <div class="section-card" id="sec-5">
+    <div class="section-header" id="sec-5-hdr">
+      <div class="section-num">5</div>
+      <div class="section-title">Consentimento</div>
+      <span class="section-badge badge-pending" id="badge-5">Pendente</span>
+      <span class="section-chevron">&#8964;</span>
+    </div>
+    <div class="section-body">
+      <div class="aceite-bloco">
+        <div class="aceite-resumo lgpd" id="aceite-lgpd-resumo">
+          <strong>Tratamento de dados pessoais (LGPD)</strong>
+          Seus dados (nome, CPF, celular, e-mail, cargo, IP e dispositivo) serao embutidos no PDF apenas para fins de formalizar a assinatura eletronica.
+          <button class="aceite-ver-mais" id="btn-ver-lgpd">Ler texto completo</button>
+        </div>
+        <div class="aceite-expandido" id="aceite-lgpd-full">
+          Ao assinar este documento, autorizo o tratamento dos seguintes dados pessoais: nome completo, CPF, numero de celular, e-mail, cargo, endereco IP, dados do dispositivo (navegador, sistema operacional, resolucao de tela, fuso horario) e imagem da assinatura digitalizada. Finalidade: formalizacao eletronica de documento trabalhista, com producao de prova de autoria e integridade. Bases legais: cumprimento de obrigacao legal e regulatoria pelo controlador (art. 7, II), execucao de contrato (art. 7, V) e exercicio regular de direitos em processo (art. 7, VI) da LGPD. Compartilhamento: os dados ficam embutidos no proprio PDF assinado, que pode ser compartilhado com a area de Recursos Humanos, com orgaos fiscalizadores e em processos administrativos ou judiciais. Retencao: prazo prescricional trabalhista (cinco anos durante o contrato e dois anos apos a rescisao, conforme art. 7, XXIX, CF/88). Direitos do titular: confirmacao, acesso, correcao, anonimizacao, portabilidade e eliminacao, observadas as excecoes legais, mediante solicitacao ao Encarregado de Dados da organizacao.
+        </div>
+        <div class="checkbox-wrap" id="wrap-lgpd">
+          <input type="checkbox" id="aceite-lgpd">
+          <label for="aceite-lgpd">Autorizo expressamente o tratamento dos meus dados pessoais nos termos acima.</label>
+        </div>
+      </div>
+
+      <div class="aceite-bloco" style="margin-top:12px;">
+        <div class="aceite-resumo" id="aceite-assin-resumo">
+          <strong>Declaracao de Assinatura Eletronica</strong>
+          Declaro ciencia do conteudo do documento e que esta assinatura tem validade juridica como assinatura eletronica avancada (MP 2.200-2/2001, art. 10, §2o).
+          <button class="aceite-ver-mais" id="btn-ver-aceite">Ler texto completo</button>
+        </div>
+        <div class="aceite-expandido" id="aceite-assin-full">
+          Declaro, para todos os fins de direito, que tomei conhecimento integral do conteudo do documento PDF anexado nesta sessao e o assino eletronicamente, com plena ciencia de que esta assinatura, embora nao emitida por certificado ICP-Brasil, constitui assinatura eletronica avancada nos termos do artigo 10, paragr. 2, da MP 2.200-2/2001, com identificacao inequivoca do signatario, integridade do documento garantida por funcao criptografica de resumo (SHA-256) e registro de trilha de auditoria (data, hora, equipamento, IP). Reconheco a validade juridica do presente ato e dispenso a formalizacao por meio fisico.
+        </div>
+        <div class="checkbox-wrap" id="wrap-assinatura">
+          <input type="checkbox" id="aceite-assinatura">
+          <label for="aceite-assinatura">Li, compreendi e aceito o termo. Sou a pessoa identificada no passo 2 e assino voluntariamente.</label>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
   </div>
 
   <div class="legal">
-    <strong>Validade jurídica.</strong> Assinatura eletrônica avançada (não qualificada), válida nos termos do art. 10, §2º, da MP 2.200-2/2001 e da Lei 14.063/2020. A força probatória plena depende de prévia adesão das partes a este meio (recomenda-se Termo de Adesão à Assinatura Eletrônica entre empregador e empregado). Para atos que exijam fé pública ou certificação qualificada, utilize certificado ICP-Brasil.
+    <strong>Validade juridica.</strong> Assinatura eletronica avancada (nao qualificada), valida nos termos do art. 10, §2o, da MP 2.200-2/2001 e da Lei 14.063/2020. Para atos que exijam fe publica ou certificacao qualificada, utilize certificado ICP-Brasil.
   </div>
 
 </main>
 
+<!-- BOTAO FLUTUANTE -->
+<div class="fab-wrap">
+  <button id="btn-assinar" disabled>
+    <span class="btn-icon">&#9998;</span>
+    <div>
+      <div>Assinar e baixar PDF</div>
+      <div class="btn-progress" id="btn-progress-txt">Complete todos os passos para assinar</div>
+    </div>
+  </button>
+</div>
+
+<!-- MODAL HISTORICO -->
 <div id="history-modal" class="modal">
   <div class="modal-content">
-    <div class="modal-header"><h3>Histórico de assinaturas neste dispositivo</h3><button class="btn-ghost" id="btn-fechar-historico">Fechar</button></div>
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3>Historico de assinaturas</h3>
+      <button class="btn-ghost" id="btn-fechar-historico">Fechar</button>
+    </div>
     <div class="modal-body" id="history-body"></div>
     <div class="modal-footer">
       <button class="btn-ghost" id="btn-exportar-historico">Exportar JSON</button>
-      <button class="btn-ghost" id="btn-limpar-historico" style="color:var(--danger);border-color:var(--danger);">Apagar histórico</button>
+      <button class="btn-ghost" id="btn-limpar-historico" style="color:var(--danger);border-color:var(--danger);">Apagar</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL LGPD -->
 <div id="lgpd-modal" class="modal">
   <div class="modal-content">
-    <div class="modal-header"><h3 style="color:var(--lgpd);">Aviso de Privacidade e LGPD</h3><button class="btn-ghost" id="btn-fechar-lgpd">Fechar</button></div>
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h3 style="color:var(--lgpd);">Aviso de Privacidade e LGPD</h3>
+      <button class="btn-ghost" id="btn-fechar-lgpd">Fechar</button>
+    </div>
     <div class="modal-body" id="lgpd-modal-body"></div>
   </div>
 </div>
@@ -255,7 +958,7 @@
 
   /* ===== CONFIG ===== */
   const CONFIG = Object.freeze({
-    versao: '2.1',
+    versao: '3.0',
     storageKey: 'asn_hist_v2',
     storageLgpdKey: 'asn_lgpd_ack_v2',
     maxFileSize: 20 * 1024 * 1024,
@@ -269,8 +972,8 @@
     ipifyUrl: 'https://api.ipify.org?format=json',
     ipifyTimeoutMs: 3000,
     pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
-    pdfRenderScale: 1.5,
-    lgpdTextoCompleto: 'Esta ferramenta de assinatura eletrônica realiza tratamento dos seguintes dados pessoais do signatário: nome completo, CPF, número de celular, e-mail, cargo, endereço IP público, dados técnicos do dispositivo (user-agent do navegador, sistema operacional, resolução de tela, fuso horário e idioma) e imagem da assinatura digitalizada gerada a partir do texto digitado. A finalidade do tratamento é exclusivamente a formalização eletrônica do documento anexado, com produção de prova de autoria e integridade. As bases legais aplicáveis são as previstas no art. 7º da Lei 13.709/2018 (LGPD), incisos II (cumprimento de obrigação legal e regulatória), V (execução de contrato do qual o titular é parte) e VI (exercício regular de direitos em processo judicial, administrativo ou arbitral). Os dados são embutidos nos metadados do próprio PDF assinado e na página visual de assinatura, ficando sob guarda do signatário, do empregador e de terceiros legítimos a quem o documento for apresentado. O histórico local em localStorage permanece apenas neste navegador, podendo ser apagado pelo titular a qualquer momento na opção Apagar histórico. O signatário possui os direitos previstos no art. 18 da LGPD: confirmação da existência de tratamento, acesso, correção, anonimização, portabilidade e eliminação dos dados, observadas as exceções legais, em especial a guarda do PDF assinado durante o prazo prescricional trabalhista (cinco anos durante o contrato e dois anos após a rescisão, art. 7º, XXIX, CF/88). Para exercer qualquer direito, contate o Encarregado pelo Tratamento de Dados (DPO) da organização empregadora.'
+    pdfRenderScale: 1.2,
+    lgpdTextoCompleto: 'Esta ferramenta de assinatura eletronica realiza tratamento dos seguintes dados pessoais do signatario: nome completo, CPF, numero de celular, e-mail, cargo, endereco IP publico, dados tecnicos do dispositivo (user-agent do navegador, sistema operacional, resolucao de tela, fuso horario e idioma) e imagem da assinatura digitalizada gerada a partir do texto digitado. A finalidade do tratamento e exclusivamente a formalizacao eletronica do documento anexado, com producao de prova de autoria e integridade. As bases legais aplicaveis sao as previstas no art. 7 da Lei 13.709/2018 (LGPD), incisos II (cumprimento de obrigacao legal e regulatoria), V (execucao de contrato do qual o titular e parte) e VI (exercicio regular de direitos em processo judicial, administrativo ou arbitral). Os dados sao embutidos nos metadados do proprio PDF assinado e na pagina visual de assinatura, ficando sob guarda do signatario, do empregador e de terceiros legitimos a quem o documento for apresentado. O historico local em localStorage permanece apenas neste navegador, podendo ser apagado pelo titular a qualquer momento na opcao Apagar historico. O signatario possui os direitos previstos no art. 18 da LGPD: confirmacao da existencia de tratamento, acesso, correcao, anonimizacao, portabilidade e eliminacao dos dados, observadas as excecoes legais, em especial a guarda do PDF assinado durante o prazo prescricional trabalhista (cinco anos durante o contrato e dois anos apos a rescisao, art. 7, XXIX, CF/88). Para exercer qualquer direito, contate o Encarregado pelo Tratamento de Dados (DPO) da organizacao empregadora.'
   });
 
   /* ===== ESTADO ===== */
@@ -278,7 +981,7 @@
     pdfBuffer: null, pdfName: null, pdfSize: null, pdfHashOriginal: null,
     signatureDataUrl: null, selectedFont: CONFIG.fontsEnum[0], ip: null,
     pdfJsDoc: null, currentPage: 0, totalPages: 0, pageViewport: null,
-    sigPosition: null // { pageIdx, xRatio, yRatio, widthRatio }
+    sigPosition: null
   });
   const stateMutator = function(k, v) { if (!(k in state)) throw new Error('estado'); state[k] = v; };
   const stateReader = function(k) { return state[k]; };
@@ -313,7 +1016,7 @@
 
   /* ===== BINARY ===== */
   const binaryUtils = Object.freeze({
-    dataURLtoBytes: function(d){const i=String(d).indexOf(',');if(i<0)throw new Error('DataURL inválida');const b=atob(d.slice(i+1));const a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;},
+    dataURLtoBytes: function(d){const i=String(d).indexOf(',');if(i<0)throw new Error('DataURL invalida');const b=atob(d.slice(i+1));const a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;},
     bytesToBase64Utf8: function(s){return btoa(unescape(encodeURIComponent(String(s))));},
     downloadBytes: function(b,n,m){const bl=new Blob([b],{type:m});const u=URL.createObjectURL(bl);const a=doc.createElement('a');a.href=u;a.download=n;a.rel='noopener noreferrer';doc.body.appendChild(a);a.click();doc.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},1500);}
   });
@@ -335,7 +1038,7 @@
     return function(t,sz){const q=qr(0,'M');q.addData(String(t));q.make();const mc=q.getModuleCount();const cs=Math.floor(sz/mc);const mg=Math.floor((sz-cs*mc)/2);const c=doc.createElement('canvas');c.width=sz;c.height=sz;const x=c.getContext('2d');x.fillStyle='#FFFFFF';x.fillRect(0,0,sz,sz);x.fillStyle='#000000';for(let r=0;r<mc;r++)for(let cc=0;cc<mc;cc++)if(q.isDark(r,cc))x.fillRect(mg+cc*cs,mg+r*cs,cs,cs);return c.toDataURL('image/png');};
   })(qrcodeRef);
 
-  /* ===== CANVAS DE ASSINATURA (texto -> imagem) ===== */
+  /* ===== CANVAS DE ASSINATURA ===== */
   const sigCanvas = doc.getElementById('signature-canvas');
   const sigCtx = sigCanvas.getContext('2d');
 
@@ -354,24 +1057,73 @@
     sigCtx.clearRect(0,0,r.width,r.height);
     if(!texto){stateMutator('signatureDataUrl',null);atualizarOverlay();atualizarBotaoAssinar();return;}
     try{await doc.fonts.load('48px "'+fonte+'"');}catch(e){}
-    let fs=56;
+    let fs=48;
     sigCtx.fillStyle='#003C64';
     sigCtx.textBaseline='middle';
     sigCtx.textAlign='center';
-    do{sigCtx.font=fs+'px "'+fonte+'", cursive';const w=sigCtx.measureText(texto).width;if(w<r.width-80)break;fs-=2;}while(fs>22);
-    sigCtx.fillText(texto,r.width/2,r.height/2-10);
+    do{sigCtx.font=fs+'px "'+fonte+'", cursive';const w=sigCtx.measureText(texto).width;if(w<r.width-40)break;fs-=2;}while(fs>18);
+    sigCtx.fillText(texto,r.width/2,r.height/2-6);
     stateMutator('signatureDataUrl',sigCanvas.toDataURL('image/png'));
     atualizarOverlay();
     atualizarBotaoAssinar();
+    atualizarProgressBar();
   }
 
-  /* ===== POSICIONADOR (PDF.js + drag overlay) ===== */
+  /* ===== MINIATURA DO PDF (thumb) ===== */
+  async function renderizarMiniatura(){
+    const d=stateReader('pdfJsDoc');
+    if(!d)return;
+    try{
+      const page=await d.getPage(1);
+      const vp=page.getViewport({scale:0.4});
+      const thumbCanvas=doc.getElementById('pdf-thumb-canvas');
+      const ctx=thumbCanvas.getContext('2d');
+      thumbCanvas.width=vp.width;
+      thumbCanvas.height=vp.height;
+      thumbCanvas.style.maxWidth='100%';
+      thumbCanvas.style.height='auto';
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      const wrap=doc.getElementById('pdf-thumb-wrap');
+      wrap.classList.add('show');
+      doc.getElementById('pdf-thumb-label').textContent='Pagina 1 de '+d.numPages+' - toque para posicionar';
+    }catch(e){}
+  }
+
+  /* ===== POSICIONADOR DOCUSIGN-STYLE ===== */
   pdfjsRef.GlobalWorkerOptions.workerSrc = CONFIG.pdfjsWorker;
   const pdfCanvas = doc.getElementById('pdf-canvas');
   const pdfCtx = pdfCanvas.getContext('2d');
   const overlay = doc.getElementById('sig-overlay');
   const overlayImg = doc.getElementById('sig-overlay-img');
   const resizeHandle = doc.getElementById('resize-handle');
+  const tapLayer = doc.getElementById('ds-tap-layer');
+
+  // Atualiza o chip de instrucao do posicionador
+  function atualizarChipPos(temAssinatura){
+    const chip=doc.getElementById('pos-chip');
+    const icon=doc.getElementById('pos-chip-icon');
+    const txt=doc.getElementById('pos-chip-txt');
+    const toolbar=doc.getElementById('pos-toolbar');
+    const chipsAcao=doc.getElementById('pos-chips-acao');
+    const pageNav=doc.getElementById('ds-page-nav');
+    if(temAssinatura){
+      chip.className='pos-chip pos-chip-done';
+      icon.textContent='\u2714';
+      txt.textContent='Assinatura posicionada. Arraste para ajustar.';
+      if(toolbar)toolbar.style.display='block';
+      if(chipsAcao)chipsAcao.style.display='flex';
+      if(pageNav)pageNav.style.display='flex';
+      tapLayer.classList.add('hidden');
+    }else{
+      chip.className='pos-chip pos-chip-tap';
+      icon.textContent='\u270E';
+      txt.textContent='Toque no documento onde quer assinar';
+      if(toolbar)toolbar.style.display='none';
+      if(chipsAcao)chipsAcao.style.display='none';
+      if(pageNav)pageNav.style.display='none';
+      tapLayer.classList.remove('hidden');
+    }
+  }
 
   async function carregarPdfJs(){
     if(!stateReader('pdfBuffer'))return;
@@ -382,13 +1134,18 @@
       stateMutator('pdfJsDoc',doc2);
       stateMutator('totalPages',doc2.numPages);
       stateMutator('currentPage',doc2.numPages-1);
-      stateMutator('sigPosition',{pageIdx:doc2.numPages-1,xRatio:.5,yRatio:.85,widthRatio:.3});
+      // SEM pre-posicionar — usuario vai tocar para escolher
+      stateMutator('sigPosition',null);
+      // Atualiza totais nas duas navs
       doc.getElementById('page-total').textContent=doc2.numPages;
+      doc.getElementById('page-total-2').textContent=doc2.numPages;
       doc.getElementById('pos-placeholder').style.display='none';
       doc.getElementById('pos-area').style.display='block';
+      atualizarChipPos(false);
       await renderizarPagina(doc2.numPages-1);
+      await renderizarMiniatura();
     }catch(e){
-      mostrarStatus('Erro ao carregar PDF para visualização: '+e.message,'error');
+      mostrarStatus('Erro ao carregar PDF para visualizacao: '+e.message,'error');
     }
   }
 
@@ -396,17 +1153,30 @@
     const d=stateReader('pdfJsDoc');
     if(!d)return;
     const page=await d.getPage(idx+1);
-    const viewport=page.getViewport({scale:CONFIG.pdfRenderScale});
+    const rawVp=page.getViewport({scale:1});
+    // Largura maxima disponivel no viewer
+    const viewerEl=doc.getElementById('ds-viewer');
+    const containerW=viewerEl ? Math.min(viewerEl.clientWidth-32, 580) : Math.min(globalScope.innerWidth-60, 580);
+    const scale=Math.max(0.5,Math.min(containerW/rawVp.width, 2.0));
+    const viewport=page.getViewport({scale:scale});
     pdfCanvas.width=viewport.width;
     pdfCanvas.height=viewport.height;
     pdfCanvas.style.width=viewport.width+'px';
     pdfCanvas.style.height=viewport.height+'px';
     await page.render({canvasContext:pdfCtx,viewport:viewport}).promise;
     stateMutator('currentPage',idx);
-    stateMutator('pageViewport',{width:viewport.width,height:viewport.height});
+    stateMutator('pageViewport',{width:viewport.width,height:viewport.height,rawWidth:rawVp.width,scale:scale});
+    // Atualiza ambas as navs
     doc.getElementById('page-current').textContent=idx+1;
-    doc.getElementById('page-prev').disabled=(idx<=0);
-    doc.getElementById('page-next').disabled=(idx>=stateReader('totalPages')-1);
+    doc.getElementById('page-current-2').textContent=idx+1;
+    const atFirst=(idx<=0);
+    const atLast=(idx>=stateReader('totalPages')-1);
+    doc.getElementById('page-prev').disabled=atFirst;
+    doc.getElementById('page-next').disabled=atLast;
+    doc.getElementById('ds-prev').disabled=atFirst;
+    doc.getElementById('ds-next').disabled=atLast;
+    const pos=stateReader('sigPosition');
+    if(pos)stateMutator('sigPosition',Object.assign({},pos,{widthRatio:pos.widthRatio||0.28}));
     atualizarOverlay();
   }
 
@@ -419,7 +1189,10 @@
     overlay.style.display='block';
     overlayImg.src=sig;
     const w=vp.width*pos.widthRatio;
-    const aspect=parseFloat(sigCanvas.height/sigCanvas.width)||0.5;
+    // aspect ratio do canvas pode ser 0 se ainda nao foi renderizado — usar fallback
+    const canvH=sigCanvas.height||1;
+    const canvW=sigCanvas.width||1;
+    const aspect=canvH/canvW||0.35;
     const h=w*aspect;
     const x=vp.width*pos.xRatio-w/2;
     const y=vp.height*pos.yRatio-h/2;
@@ -429,7 +1202,31 @@
     overlay.style.height=h+'px';
   }
 
-  // Drag
+  // TAP-TO-PLACE: usuario toca no PDF para colocar assinatura
+  tapLayer.addEventListener('pointerdown',function(e){
+    const sig=stateReader('signatureDataUrl');
+    if(!sig){
+      // Avisa que precisa gerar assinatura primeiro
+      toggleSecao(3);
+      return;
+    }
+    const vp=stateReader('pageViewport');
+    if(!vp)return;
+    const rect=tapLayer.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    const y=e.clientY-rect.top;
+    const xRatio=x/vp.width;
+    const yRatio=y/vp.height;
+    const cur=stateReader('currentPage');
+    stateMutator('sigPosition',{pageIdx:cur,xRatio:xRatio,yRatio:yRatio,widthRatio:0.28});
+    atualizarOverlay();
+    atualizarChipPos(true);
+    atualizarBotaoAssinar();
+    atualizarProgressBar();
+    e.preventDefault();
+  });
+
+  // DRAG e RESIZE do overlay (pointer events — touch e mouse)
   let isDragging=false;
   let isResizing=false;
   let dragStartX=0,dragStartY=0,initialX=0,initialY=0,initialW=0;
@@ -445,6 +1242,7 @@
     initialY=rect.top-containerRect.top;
     initialW=rect.width;
     e.preventDefault();
+    e.stopPropagation();
   });
   overlay.addEventListener('pointermove',function(e){
     if(!isDragging&&!isResizing)return;
@@ -454,11 +1252,14 @@
     const dx=e.clientX-dragStartX;
     const dy=e.clientY-dragStartY;
     if(isResizing){
-      const newW=Math.max(40,Math.min(vp.width*0.8,initialW+dx));
+      const newW=Math.max(30,Math.min(vp.width*0.8,initialW+dx));
       const widthRatio=newW/vp.width;
       stateMutator('sigPosition',Object.assign({},pos,{widthRatio:widthRatio}));
+      doc.getElementById('sig-size').value=String(widthRatio.toFixed(2));
     }else{
-      const aspect=parseFloat(sigCanvas.height/sigCanvas.width)||0.5;
+      const canvH=sigCanvas.height||1;
+      const canvW=sigCanvas.width||1;
+      const aspect=canvH/canvW||0.35;
       const w=vp.width*pos.widthRatio;
       const h=w*aspect;
       let newX=initialX+dx;
@@ -475,6 +1276,8 @@
     isDragging=false;isResizing=false;
     overlay.classList.remove('dragging');
     try{overlay.releasePointerCapture(e.pointerId);}catch(err){}
+    atualizarBotaoAssinar();
+    atualizarProgressBar();
   });
   overlay.addEventListener('pointercancel',function(){isDragging=false;isResizing=false;overlay.classList.remove('dragging');});
 
@@ -484,6 +1287,70 @@
     s.textContent=String(msg);
     s.className='status show '+tipo;
     if(tipo!=='success')setTimeout(function(){s.classList.remove('show');},7000);
+  }
+
+  /* ===== PROGRESSO / SECOES ===== */
+  function atualizarProgressBar(){
+    const f=lerFormulario();
+    const p1=stateReader('pdfBuffer')!==null;
+    const p2=validators.nome(f.nome)&&validators.cpf(f.cpf)&&validators.celular(f.celular)&&validators.email(f.email);
+    const p3=stateReader('signatureDataUrl')!==null&&f.sigText.length>=2;
+    const p4=stateReader('sigPosition')!==null;
+    const p5=f.aceiteLgpd&&f.aceiteAssinatura;
+
+    function setStep(id,done,active){
+      const el=doc.getElementById('prog-'+id);
+      el.classList.remove('done','active');
+      const dot=el.querySelector('.prog-dot');
+      if(done){el.classList.add('done');dot.textContent='✓';}
+      else if(active){el.classList.add('active');dot.textContent=String(id);}
+      else{dot.textContent=String(id);}
+    }
+    setStep(1,p1,!p1);
+    setStep(2,p2,p1&&!p2);
+    setStep(3,p3,p2&&!p3);
+    setStep(4,p4,p3&&!p4);
+    setStep(5,p5,p4&&!p5);
+
+    // badges
+    const badge=function(id,ok){
+      const b=doc.getElementById('badge-'+id);
+      b.textContent=ok?'Pronto':'Pendente';
+      b.className='section-badge '+(ok?'badge-ok':'badge-pending');
+      const sec=doc.getElementById('sec-'+id);
+      if(ok)sec.classList.add('done'); else sec.classList.remove('done');
+    };
+    badge(1,p1);badge(2,p2);badge(3,p3);badge(4,p4);badge(5,p5);
+
+    // texto do botao
+    const ptxt=doc.getElementById('btn-progress-txt');
+    if(!p1)ptxt.textContent='Passo 1: selecione o PDF';
+    else if(!p2)ptxt.textContent='Passo 2: preencha os dados';
+    else if(!p3)ptxt.textContent='Passo 3: gere a assinatura';
+    else if(!p4)ptxt.textContent='Passo 4: posicione no documento';
+    else if(!p5)ptxt.textContent='Passo 5: marque os aceites';
+    else ptxt.textContent='Tudo certo. Clique para assinar.';
+  }
+
+  /* ===== SECOES COLAPSAVEIS ===== */
+  function toggleSecao(id){
+    const card=doc.getElementById('sec-'+id);
+    const isOpen=card.classList.contains('open');
+    // fecha todas
+    for(let i=1;i<=5;i++){
+      const c=doc.getElementById('sec-'+i);
+      c.classList.remove('open','active');
+    }
+    if(!isOpen){
+      card.classList.add('open','active');
+      // canvas de assinatura só tem dimensões reais quando visível
+      if(id===3){
+        requestAnimationFrame(function(){
+          setupSigCanvas();
+          renderTextSignature();
+        });
+      }
+    }
   }
 
   /* ===== FORM ===== */
@@ -499,6 +1366,7 @@
       aceiteAssinatura:doc.getElementById('aceite-assinatura').checked
     };
   }
+
   function atualizarBotaoAssinar(){
     const f=lerFormulario();
     const pronto=stateReader('pdfBuffer')!==null
@@ -508,7 +1376,23 @@
       &&stateReader('sigPosition')!==null
       &&f.aceiteLgpd&&f.aceiteAssinatura;
     doc.getElementById('btn-assinar').disabled=!pronto;
+    atualizarProgressBar();
   }
+
+  function validarCampoAoSair(id,fn){
+    const el=doc.getElementById(id);
+    const fieldEl=doc.getElementById('field-'+id);
+    if(!fieldEl)return;
+    if(el.value.trim().length===0)return; // nao valida campo vazio ao sair
+    if(fn(el.value)){
+      el.classList.remove('error');el.classList.add('valid');
+      fieldEl.classList.remove('has-error');
+    }else{
+      el.classList.add('error');el.classList.remove('valid');
+      fieldEl.classList.add('has-error');
+    }
+  }
+
   function mascararCpfInput(e){
     let v=e.target.value.replace(/\D/g,'').slice(0,11);
     v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
@@ -529,29 +1413,34 @@
   const handlePdfUpload = (function(validatePdf, hashFn, sizeFn){
     return async function(file){
       if(!file)return;
-      if(file.type!=='application/pdf')return mostrarStatus('Arquivo inválido. Selecione um PDF.','error');
+      if(file.type!=='application/pdf')return mostrarStatus('Arquivo invalido. Selecione um PDF.','error');
       if(file.size>CONFIG.maxFileSize)return mostrarStatus('Arquivo excede o limite de 20 MB.','error');
       try{
         const buffer=await file.arrayBuffer();
-        if(!validatePdf(buffer))return mostrarStatus('O arquivo não é um PDF válido (assinatura binária ausente).','error');
+        if(!validatePdf(buffer))return mostrarStatus('O arquivo nao e um PDF valido (assinatura binaria ausente).','error');
         const hash=await hashFn(buffer);
         stateMutator('pdfBuffer',buffer);
         stateMutator('pdfName',String(file.name).slice(0,200));
         stateMutator('pdfSize',file.size);
         stateMutator('pdfHashOriginal',hash);
         const dz=doc.getElementById('dropzone');
-        const dzT=doc.getElementById('dropzone-text');
+        const dzInner=dz.querySelector('strong');
+        const dzSpan=dz.querySelector('span');
         dz.classList.add('has-file');
-        dzT.textContent='';
-        const st=doc.createElement('strong');st.textContent=file.name;
-        const sp=doc.createElement('span');sp.style.fontSize='.85rem';sp.textContent=' '+sizeFn(file.size)+' - clique para trocar';
-        dzT.appendChild(st);dzT.appendChild(doc.createElement('br'));dzT.appendChild(sp);
+        if(dzInner)dzInner.textContent=file.name;
+        if(dzSpan)dzSpan.textContent=sizeFn(file.size)+' - toque para trocar';
         const info=doc.getElementById('pdf-info');
-        info.style.display='block';info.textContent='';
-        const lb=doc.createElement('span');lb.textContent='Hash SHA-256 do documento: ';
+        info.style.display='block';
+        info.innerHTML='';
+        const lb=doc.createElement('span');lb.textContent='SHA-256: ';
         const cd=doc.createElement('span');cd.className='hash-preview';cd.textContent=hash;
         info.appendChild(lb);info.appendChild(cd);
         atualizarBotaoAssinar();
+        // auto-avanca para passo 2 se ainda nao preencheu
+        const f=lerFormulario();
+        if(!validators.nome(f.nome)){
+          setTimeout(function(){toggleSecao(2);},400);
+        }
         await carregarPdfJs();
       }catch(err){mostrarStatus('Erro ao processar PDF: '+err.message,'error');}
     };
@@ -569,28 +1458,26 @@
       const helvBold=await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const helvOblique=await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
-      // Embed da imagem da assinatura (usada nas duas inserções)
       const sigBytes=dataURLtoBytes(stateReader('signatureDataUrl'));
       const sigImage=await pdfDoc.embedPng(sigBytes);
 
-      // 1) Aplicar assinatura visual na página escolhida pelo usuário (índice no PDF ORIGINAL)
+      // Assinatura visual na pagina escolhida
       const sigPos=stateReader('sigPosition');
       if(sigPos){
         const allPages=pdfDoc.getPages();
-        const targetIdx=sigPos.pageIdx; // ainda não inserimos o certificado
+        const targetIdx=sigPos.pageIdx;
         if(targetIdx>=0&&targetIdx<allPages.length){
           const tp=allPages[targetIdx];
           const ps=tp.getSize();
           const sigW=ps.width*sigPos.widthRatio;
           const sigH=sigW*(sigImage.height/sigImage.width);
           const pdfX=ps.width*sigPos.xRatio-sigW/2;
-          // PDF.js Y cresce para baixo, pdf-lib Y cresce para cima
           const pdfY=ps.height*(1-sigPos.yRatio)-sigH/2;
           tp.drawImage(sigImage,{x:pdfX,y:pdfY,width:sigW,height:sigH});
         }
       }
 
-      // 2) Página de CERTIFICADO como PRIMEIRA página
+      // Pagina de CERTIFICADO como PRIMEIRA pagina
       const page=pdfDoc.insertPage(0,[595.28,841.89]);
       const sz=page.getSize();
       const width=sz.width, height=sz.height;
@@ -604,7 +1491,7 @@
       const lgpdColor=rgb(c.lgpd[0],c.lgpd[1],c.lgpd[2]);
 
       page.drawRectangle({x:0,y:height-70,width:width,height:70,color:primary});
-      page.drawText('CERTIFICADO DE ASSINATURA ELETRÔNICA',{x:40,y:height-38,size:16,font:helvBold,color:white});
+      page.drawText('CERTIFICADO DE ASSINATURA ELETRONICA',{x:40,y:height-38,size:16,font:helvBold,color:white});
       page.drawText('Documento assinado nos termos da MP 2.200-2/2001 e da Lei 14.063/2020',{x:40,y:height-58,size:8.5,font:helv,color:white});
 
       page.drawRectangle({x:width-165,y:height-220,width:130,height:80,borderColor:primary,borderWidth:2,color:white});
@@ -613,7 +1500,7 @@
       page.drawText(fmtData(new Date(manifesto.timestampISO)),{x:width-156,y:height-208,size:7,font:helv,color:muted});
 
       let y=height-110;
-      page.drawText('DADOS DO SIGNATÁRIO',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
+      page.drawText('DADOS DO SIGNATARIO',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-180,y:y},color:primary,thickness:1.5});y-=18;
       const campos=[
         ['Nome:',manifesto.signatario.nome],
@@ -635,16 +1522,16 @@
       page.drawLine({start:{x:48,y:y-sigH2-2},end:{x:48+sigW2,y:y-sigH2-2},color:rgb(.5,.5,.5),thickness:.5});
       y-=sigH2+28;
 
-      page.drawText('EVIDÊNCIAS TÉCNICAS DA ASSINATURA',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
+      page.drawText('EVIDENCIAS TECNICAS DA ASSINATURA',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-40,y:y},color:primary,thickness:1.5});y-=18;
       const evid=[
         ['ID da assinatura:',manifesto.idAssinatura],
         ['Data e hora:',manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')'],
-        ['Endereço IP:',manifesto.evidencias.ip],
+        ['Endereco IP:',manifesto.evidencias.ip],
         ['Dispositivo:',trunc(manifesto.evidencias.userAgent,75)],
-        ['Resolução:',manifesto.evidencias.resolucaoTela],
+        ['Resolucao:',manifesto.evidencias.resolucaoTela],
         ['Estilo de assinatura:',manifesto.signatario.estiloAssinatura],
-        ['Posição (página):',String(manifesto.signatario.posicaoPagina)]
+        ['Posicao (pagina):',String(manifesto.signatario.posicaoPagina)]
       ];
       for(let i=0;i<evid.length;i++){
         page.drawText(evid[i][0],{x:40,y:y,size:8.5,font:helvBold,color:muted});
@@ -663,27 +1550,27 @@
       const qrSize=90;
       page.drawImage(qrImage,{x:width-qrSize-40,y:110,width:qrSize,height:qrSize});
       page.drawText('Verifique este documento:',{x:width-qrSize-40,y:102,size:7.5,font:helvBold,color:muted});
-      page.drawText('Aponte a câmera ou acesse',{x:width-qrSize-40,y:92,size:7,font:helv,color:muted});
+      page.drawText('Aponte a camera ou acesse',{x:width-qrSize-40,y:92,size:7,font:helv,color:muted});
       page.drawText(trunc(verifUrl,40),{x:width-qrSize-40,y:82,size:6.5,font:helv,color:primary});
 
       page.drawText('TRATAMENTO DE DADOS PESSOAIS (LGPD)',{x:40,y:y,size:9,font:helvBold,color:lgpdColor});y-=12;
-      const lgpdResumo='Signatário autorizou o tratamento dos dados pessoais aqui registrados, nos termos da Lei 13.709/2018, art. 7º, incisos II, V e VI, para fins de formalização eletrônica do documento.';
+      const lgpdResumo='Signatario autorizou o tratamento dos dados pessoais aqui registrados, nos termos da Lei 13.709/2018, art. 7, incisos II, V e VI, para fins de formalizacao eletronica do documento.';
       const linhasLgpd=quebrar(lgpdResumo,95);
       for(let i=0;i<linhasLgpd.length;i++){page.drawText(linhasLgpd[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
       y-=6;page.drawText('TERMO DE ACEITE CONFIRMADO',{x:40,y:y,size:9,font:helvBold,color:primaryDark});y-=12;
-      const aceiteResumo='Signatário declarou ciência integral do conteúdo do documento, identificou-se conforme dados acima e firmou assinatura eletrônica avançada, dispensando formalização física.';
+      const aceiteResumo='Signatario declarou ciencia integral do conteudo do documento, identificou-se conforme dados acima e firmou assinatura eletronica avancada, dispensando formalizacao fisica.';
       const linhasAceite=quebrar(aceiteResumo,95);
       for(let i=0;i<linhasAceite.length;i++){page.drawText(linhasAceite[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
 
       page.drawRectangle({x:0,y:0,width:width,height:35,color:primaryDark});
-      page.drawText('Fundamento legal: MP 2.200-2/2001, art. 10, §2º - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
-      page.drawText('Assinatura eletrônica avançada (não qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
+      page.drawText('Fundamento legal: MP 2.200-2/2001, art. 10, paragr.2 - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
+      page.drawText('Assinatura eletronica avancada (nao qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
 
       pdfDoc.setTitle('Documento Assinado Eletronicamente - '+manifesto.signatario.nome);
-      pdfDoc.setSubject('Assinatura eletrônica avançada - ID '+manifesto.idAssinatura);
+      pdfDoc.setSubject('Assinatura eletronica avancada - ID '+manifesto.idAssinatura);
       pdfDoc.setAuthor(manifesto.signatario.nome);
-      pdfDoc.setProducer('Assinador Eletrônico v'+CONFIG.versao);
-      pdfDoc.setCreator('Assinador Eletrônico v'+CONFIG.versao);
+      pdfDoc.setProducer('Assinador Eletronico v'+CONFIG.versao);
+      pdfDoc.setCreator('Assinador Eletronico v'+CONFIG.versao);
       pdfDoc.setKeywords([
         'ASSINATURA_ELETRONICA',
         'ID:'+manifesto.idAssinatura,
@@ -699,7 +1586,7 @@
     fmtData:helpers.formatarDataExtenso, b64Utf8:binaryUtils.bytesToBase64Utf8
   });
 
-  /* ===== EXECUTAR ===== */
+  /* ===== EXECUTAR ASSINATURA ===== */
   const executarAssinatura = (function(deps){
     const hashText=deps.hashText, hashBuffer=deps.hashBuffer, getIp=deps.getIp;
     const newId=deps.newId, builder=deps.builder, downloader=deps.downloader;
@@ -710,15 +1597,15 @@
       try{
         const f=lerFormulario();
         if(!stateReader('pdfBuffer'))throw new Error('Nenhum PDF carregado.');
-        if(!validators.nome(f.nome))throw new Error('Nome inválido. Informe nome completo.');
-        if(!validators.cpf(f.cpf))throw new Error('CPF inválido.');
-        if(!validators.celular(f.celular))throw new Error('Celular inválido.');
-        if(!validators.email(f.email))throw new Error('E-mail em formato inválido.');
+        if(!validators.nome(f.nome))throw new Error('Nome invalido. Informe nome completo.');
+        if(!validators.cpf(f.cpf))throw new Error('CPF invalido.');
+        if(!validators.celular(f.celular))throw new Error('Celular invalido.');
+        if(!validators.email(f.email))throw new Error('E-mail em formato invalido.');
         if(f.sigText.length<2)throw new Error('Digite o nome para gerar a assinatura.');
-        if(!stateReader('signatureDataUrl'))throw new Error('Assinatura não foi gerada.');
+        if(!stateReader('signatureDataUrl'))throw new Error('Assinatura nao foi gerada.');
         if(!stateReader('sigPosition'))throw new Error('Posicione a assinatura no documento.');
-        if(!f.aceiteLgpd)throw new Error('É necessário autorizar o tratamento de dados (LGPD).');
-        if(!f.aceiteAssinatura)throw new Error('É necessário aceitar o termo de assinatura.');
+        if(!f.aceiteLgpd)throw new Error('E necessario autorizar o tratamento de dados (LGPD).');
+        if(!f.aceiteAssinatura)throw new Error('E necessario aceitar o termo de assinatura.');
 
         const cpfNumeros=f.cpf.replace(/\D/g,'');
         const celularNumeros=f.celular.replace(/\D/g,'');
@@ -763,7 +1650,7 @@
             confirmadoAssinatura:true,
             confirmadoLgpd:true,
             timestampAceite:agora.toISOString(),
-            fundamentoLegal:'MP 2.200-2/2001, art. 10, §2º; Lei 14.063/2020; LGPD 13.709/2018, art. 7º, II, V, VI'
+            fundamentoLegal:'MP 2.200-2/2001, art. 10, paragr.2; Lei 14.063/2020; LGPD 13.709/2018, art. 7, II, V, VI'
           }
         };
 
@@ -773,8 +1660,11 @@
         const nomeArq=String(stateReader('pdfName')).replace(/\.pdf$/i,'')+'_ASSINADO.pdf';
         downloader(pdfBytes,nomeArq,'application/pdf');
         mostrarStatus('Documento assinado com sucesso. Arquivo baixado: '+nomeArq,'success');
+        // scroll para o status
+        doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
       }catch(err){
         mostrarStatus('Erro: '+(err&&err.message?err.message:'falha desconhecida'),'error');
+        doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
         console.error(err);
       }finally{atualizarBotaoAssinar();}
     };
@@ -784,7 +1674,7 @@
     downloader:binaryUtils.downloadBytes
   });
 
-  /* ===== HISTÓRICO ===== */
+  /* ===== HISTORICO ===== */
   function salvarHistorico(m){
     try{
       const raw=localStorage.getItem(CONFIG.storageKey)||'[]';
@@ -803,7 +1693,7 @@
     }else{
       const tb=doc.createElement('table');
       const th=doc.createElement('thead');const tr1=doc.createElement('tr');
-      ['Data','Signatário','Documento','ID'].forEach(function(t){const x=doc.createElement('th');x.textContent=t;tr1.appendChild(x);});
+      ['Data','Signatario','Documento','ID'].forEach(function(t){const x=doc.createElement('th');x.textContent=t;tr1.appendChild(x);});
       th.appendChild(tr1);tb.appendChild(th);
       const tbd=doc.createElement('tbody');
       for(let i=0;i<lista.length;i++){
@@ -813,7 +1703,7 @@
         const sm=doc.createElement('small');sm.style.color='var(--muted)';sm.style.display='block';
         sm.textContent=(it.cpf||'')+' - '+(it.celular||'');tdN.appendChild(sm);
         const tdDc=doc.createElement('td');tdDc.textContent=String(it.documento||'-');
-        const tdI=doc.createElement('td');const cd=doc.createElement('code');cd.style.fontSize='.72rem';cd.textContent=String(it.id||'');tdI.appendChild(cd);
+        const tdI=doc.createElement('td');const cd=doc.createElement('code');cd.style.fontSize='.7rem';cd.textContent=String(it.id||'');tdI.appendChild(cd);
         tr.appendChild(tdD);tr.appendChild(tdN);tr.appendChild(tdDc);tr.appendChild(tdI);
         tbd.appendChild(tr);
       }
@@ -828,7 +1718,7 @@
     binaryUtils.downloadBytes(b,'historico_assinaturas_'+new Date().toISOString().slice(0,10)+'.json','application/json');
   }
   function limparHistorico(){
-    if(confirm('Apagar todo o histórico armazenado neste navegador?')){
+    if(confirm('Apagar todo o historico armazenado neste navegador?')){
       localStorage.removeItem(CONFIG.storageKey);abrirHistorico();
     }
   }
@@ -850,6 +1740,7 @@
 
   /* ===== BINDING ===== */
   function bindEvents(){
+    // Upload
     const dz=doc.getElementById('dropzone');
     const pdfInput=doc.getElementById('pdf-input');
     dz.addEventListener('click',function(){pdfInput.click();});
@@ -858,71 +1749,145 @@
     dz.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files[0])handlePdfUpload(e.dataTransfer.files[0]);});
     pdfInput.addEventListener('change',function(e){if(e.target.files[0])handlePdfUpload(e.target.files[0]);});
 
+    // Mascara campos
     doc.getElementById('cpf').addEventListener('input',mascararCpfInput);
     doc.getElementById('celular').addEventListener('input',mascararCelularInput);
+    // Validacao blur
+    doc.getElementById('nome').addEventListener('blur',function(){validarCampoAoSair('nome',validators.nome);atualizarBotaoAssinar();});
+    doc.getElementById('cpf').addEventListener('blur',function(){validarCampoAoSair('cpf',validators.cpf);atualizarBotaoAssinar();});
+    doc.getElementById('celular').addEventListener('blur',function(){validarCampoAoSair('celular',validators.celular);atualizarBotaoAssinar();});
     ['nome','email','cargo'].forEach(function(id){doc.getElementById(id).addEventListener('input',atualizarBotaoAssinar);});
-    doc.getElementById('aceite-lgpd').addEventListener('change',atualizarBotaoAssinar);
-    doc.getElementById('aceite-assinatura').addEventListener('change',atualizarBotaoAssinar);
-    doc.getElementById('sig-text').addEventListener('input',renderTextSignature);
 
+    // Aceites
+    doc.getElementById('aceite-lgpd').addEventListener('change',function(){
+      doc.getElementById('wrap-lgpd').classList.toggle('checked',doc.getElementById('aceite-lgpd').checked);
+      atualizarBotaoAssinar();
+    });
+    doc.getElementById('aceite-assinatura').addEventListener('change',function(){
+      doc.getElementById('wrap-assinatura').classList.toggle('checked',doc.getElementById('aceite-assinatura').checked);
+      atualizarBotaoAssinar();
+    });
+    // Clicar no bloco inteiro do checkbox
+    doc.getElementById('wrap-lgpd').addEventListener('click',function(e){
+      if(e.target.tagName==='INPUT')return;
+      const cb=doc.getElementById('aceite-lgpd');
+      cb.checked=!cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    });
+    doc.getElementById('wrap-assinatura').addEventListener('click',function(e){
+      if(e.target.tagName==='INPUT')return;
+      const cb=doc.getElementById('aceite-assinatura');
+      cb.checked=!cb.checked;
+      cb.dispatchEvent(new Event('change'));
+    });
+
+    // Expandir texto completo dos aceites
+    doc.getElementById('btn-ver-lgpd').addEventListener('click',function(e){
+      e.stopPropagation();
+      doc.getElementById('aceite-lgpd-full').classList.toggle('show');
+      this.textContent=doc.getElementById('aceite-lgpd-full').classList.contains('show')?'Recolher':'Ler texto completo';
+    });
+    doc.getElementById('btn-ver-aceite').addEventListener('click',function(e){
+      e.stopPropagation();
+      doc.getElementById('aceite-assin-full').classList.toggle('show');
+      this.textContent=doc.getElementById('aceite-assin-full').classList.contains('show')?'Recolher':'Ler texto completo';
+    });
+
+    // Assinatura texto e estilo
+    doc.getElementById('sig-text').addEventListener('input',renderTextSignature);
     const ss=doc.getElementById('style-selector');
     ss.addEventListener('click',function(e){
-      const op=e.target.closest('.style-option');if(!op)return;
+      const op=e.target.closest('.style-tab');if(!op)return;
       const ft=op.getAttribute('data-font');if(CONFIG.fontsEnum.indexOf(ft)<0)return;
-      const all=doc.querySelectorAll('.style-option');
+      const all=doc.querySelectorAll('.style-tab');
       for(let i=0;i<all.length;i++)all[i].classList.remove('active');
       op.classList.add('active');stateMutator('selectedFont',ft);renderTextSignature();
     });
 
-    // Navegação de páginas no posicionador
-    doc.getElementById('page-prev').addEventListener('click',async function(){
+    // Navegacao paginas — nav da toolbar (page-prev/next) e nav flutuante do viewer (ds-prev/ds-next)
+    function navPrev(){
       const cur=stateReader('currentPage');if(cur<=0)return;
       const pos=stateReader('sigPosition');
-      stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur-1}));
-      await renderizarPagina(cur-1);
-    });
-    doc.getElementById('page-next').addEventListener('click',async function(){
+      if(pos)stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur-1}));
+      renderizarPagina(cur-1);
+    }
+    function navNext(){
       const cur=stateReader('currentPage');if(cur>=stateReader('totalPages')-1)return;
       const pos=stateReader('sigPosition');
-      stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur+1}));
-      await renderizarPagina(cur+1);
-    });
+      if(pos)stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur+1}));
+      renderizarPagina(cur+1);
+    }
+    doc.getElementById('page-prev').addEventListener('click',navPrev);
+    doc.getElementById('page-next').addEventListener('click',navNext);
+    doc.getElementById('ds-prev').addEventListener('click',navPrev);
+    doc.getElementById('ds-next').addEventListener('click',navNext);
+
+    // Tamanho slider
     doc.getElementById('sig-size').addEventListener('input',function(e){
       const pos=stateReader('sigPosition');if(!pos)return;
       stateMutator('sigPosition',Object.assign({},pos,{widthRatio:parseFloat(e.target.value)}));
       atualizarOverlay();
     });
-    doc.getElementById('btn-centralizar').addEventListener('click',function(){
+
+    // Centralizar e rodape (dois botoes: toolbar e chips abaixo)
+    function moverCentro(){
       const pos=stateReader('sigPosition');if(!pos)return;
       stateMutator('sigPosition',Object.assign({},pos,{xRatio:.5,yRatio:.5}));
-      atualizarOverlay();
-    });
-    doc.getElementById('btn-rodape').addEventListener('click',function(){
+      atualizarOverlay();atualizarBotaoAssinar();
+    }
+    function moverRodape(){
       const pos=stateReader('sigPosition');if(!pos)return;
       stateMutator('sigPosition',Object.assign({},pos,{xRatio:.5,yRatio:.85}));
-      atualizarOverlay();
+      atualizarOverlay();atualizarBotaoAssinar();
+    }
+    doc.getElementById('btn-centralizar').addEventListener('click',moverCentro);
+    doc.getElementById('btn-rodape2').addEventListener('click',moverRodape);
+
+    // Botao X da toolbar — remove assinatura e volta ao tap-to-place
+    doc.getElementById('btn-limpar-pos').addEventListener('click',function(){
+      stateMutator('sigPosition',null);
+      overlay.style.display='none';
+      atualizarChipPos(false);
+      atualizarBotaoAssinar();
+      atualizarProgressBar();
     });
 
+    // Secoes colapsaveis
+    for(let i=1;i<=5;i++){
+      (function(idx){
+        doc.getElementById('sec-'+idx+'-hdr').addEventListener('click',function(){toggleSecao(idx);});
+      })(i);
+    }
+
+    // Botao assinar
     doc.getElementById('btn-assinar').addEventListener('click',executarAssinatura);
+
+    // Historico
     doc.getElementById('link-historico').addEventListener('click',function(e){e.preventDefault();abrirHistorico();});
     doc.getElementById('btn-fechar-historico').addEventListener('click',fecharHistorico);
     doc.getElementById('btn-exportar-historico').addEventListener('click',exportarHistorico);
     doc.getElementById('btn-limpar-historico').addEventListener('click',limparHistorico);
     doc.getElementById('history-modal').addEventListener('click',function(e){if(e.target.id==='history-modal')fecharHistorico();});
+
+    // LGPD
     doc.getElementById('lgpd-details-link').addEventListener('click',abrirLgpdModal);
     doc.getElementById('btn-fechar-lgpd').addEventListener('click',fecharLgpdModal);
     doc.getElementById('lgpd-ack').addEventListener('click',ocultarBanner);
     doc.getElementById('lgpd-modal').addEventListener('click',function(e){if(e.target.id==='lgpd-modal')fecharLgpdModal();});
 
+    // Resize
     globalScope.addEventListener('resize',function(){setupSigCanvas();renderTextSignature();});
   }
 
   function init(){
     if(!pdfLibRef||!qrcodeRef||!cryptoApi||!cryptoApi.subtle||!pdfjsRef){
-      mostrarStatus('Falha ao carregar dependências. Verifique sua conexão.','error');return;
+      mostrarStatus('Falha ao carregar dependencias. Verifique sua conexao.','error');return;
     }
-    setupSigCanvas();bindEvents();inicializarBannerLgpd();
-    if(doc.fonts&&doc.fonts.ready)doc.fonts.ready.then(function(){});
+    setupSigCanvas();
+    bindEvents();
+    inicializarBannerLgpd();
+    atualizarProgressBar();
+    if(doc.fonts&&doc.fonts.ready)doc.fonts.ready.then(function(){renderTextSignature();});
   }
 
   if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init);
