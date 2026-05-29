@@ -1458,6 +1458,12 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       const helvBold=await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const helvOblique=await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
+      // sanitiza texto p/ WinAnsi — Helvetica padrao nao suporta acentos
+      function s(t){
+        if(t==null)return '';
+        return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
+      }
+
       const sigBytes=dataURLtoBytes(stateReader('signatureDataUrl'));
       const sigImage=await pdfDoc.embedPng(sigBytes);
 
@@ -1503,11 +1509,11 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText('DADOS DO SIGNATARIO',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-180,y:y},color:primary,thickness:1.5});y-=18;
       const campos=[
-        ['Nome:',manifesto.signatario.nome],
-        ['CPF:',manifesto.signatario.cpf],
-        ['Celular:',manifesto.signatario.celular],
-        ['Cargo:',manifesto.signatario.cargo||'-'],
-        ['E-mail:',manifesto.signatario.email||'-']
+        ['Nome:',s(manifesto.signatario.nome)],
+        ['CPF:',s(manifesto.signatario.cpf)],
+        ['Celular:',s(manifesto.signatario.celular)],
+        ['Cargo:',s(manifesto.signatario.cargo||'-')],
+        ['E-mail:',s(manifesto.signatario.email||'-')]
       ];
       for(let i=0;i<campos.length;i++){
         page.drawText(campos[i][0],{x:40,y:y,size:9,font:helvBold,color:muted});
@@ -1525,13 +1531,13 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText('EVIDENCIAS TECNICAS DA ASSINATURA',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-40,y:y},color:primary,thickness:1.5});y-=18;
       const evid=[
-        ['ID da assinatura:',manifesto.idAssinatura],
-        ['Data e hora:',manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')'],
-        ['Endereco IP:',manifesto.evidencias.ip],
-        ['Dispositivo:',trunc(manifesto.evidencias.userAgent,75)],
-        ['Resolucao:',manifesto.evidencias.resolucaoTela],
-        ['Estilo de assinatura:',manifesto.signatario.estiloAssinatura],
-        ['Posicao (pagina):',String(manifesto.signatario.posicaoPagina)]
+        ['ID da assinatura:',s(manifesto.idAssinatura)],
+        ['Data e hora:',s(manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')')],
+        ['Endereco IP:',s(manifesto.evidencias.ip)],
+        ['Dispositivo:',s(trunc(manifesto.evidencias.userAgent,75))],
+        ['Resolucao:',s(manifesto.evidencias.resolucaoTela)],
+        ['Estilo de assinatura:',s(manifesto.signatario.estiloAssinatura)],
+        ['Posicao (pagina):',s(String(manifesto.signatario.posicaoPagina))]
       ];
       for(let i=0;i<evid.length;i++){
         page.drawText(evid[i][0],{x:40,y:y,size:8.5,font:helvBold,color:muted});
@@ -1539,8 +1545,8 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
         y-=14;
       }
       page.drawText('Hash SHA-256 do documento original:',{x:40,y:y,size:8.5,font:helvBold,color:muted});y-=12;
-      page.drawText(manifesto.documento.hashSHA256Original,{x:40,y:y,size:7.5,font:helv,color:textColor});y-=16;
-      page.drawText('Arquivo original: '+trunc(manifesto.documento.nomeOriginal,60),{x:40,y:y,size:8,font:helvOblique,color:muted});y-=22;
+      page.drawText(s(manifesto.documento.hashSHA256Original),{x:40,y:y,size:7.5,font:helv,color:textColor});y-=16;
+      page.drawText(s('Arquivo original: '+trunc(manifesto.documento.nomeOriginal,60)),{x:40,y:y,size:8,font:helvOblique,color:muted});y-=22;
 
       const baseUrl=globalScope.location.href.replace(/[?#].*$/,'').replace(/\/[^\/]*$/,'/');
       const verifUrl=baseUrl+'verificar.html?id='+encodeURIComponent(manifesto.idAssinatura);
@@ -1551,7 +1557,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawImage(qrImage,{x:width-qrSize-40,y:110,width:qrSize,height:qrSize});
       page.drawText('Verifique este documento:',{x:width-qrSize-40,y:102,size:7.5,font:helvBold,color:muted});
       page.drawText('Aponte a camera ou acesse',{x:width-qrSize-40,y:92,size:7,font:helv,color:muted});
-      page.drawText(trunc(verifUrl,40),{x:width-qrSize-40,y:82,size:6.5,font:helv,color:primary});
+      page.drawText(s(trunc(verifUrl,40)),{x:width-qrSize-40,y:82,size:6.5,font:helv,color:primary});
 
       page.drawText('TRATAMENTO DE DADOS PESSOAIS (LGPD)',{x:40,y:y,size:9,font:helvBold,color:lgpdColor});y-=12;
       const lgpdResumo='Signatario autorizou o tratamento dos dados pessoais aqui registrados, nos termos da Lei 13.709/2018, art. 7, incisos II, V e VI, para fins de formalizacao eletronica do documento.';
@@ -1566,9 +1572,9 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText('Fundamento legal: MP 2.200-2/2001, art. 10, paragr.2 - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
       page.drawText('Assinatura eletronica avancada (nao qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
 
-      pdfDoc.setTitle('Documento Assinado Eletronicamente - '+manifesto.signatario.nome);
-      pdfDoc.setSubject('Assinatura eletronica avancada - ID '+manifesto.idAssinatura);
-      pdfDoc.setAuthor(manifesto.signatario.nome);
+      pdfDoc.setTitle(s('Documento Assinado Eletronicamente - '+manifesto.signatario.nome));
+      pdfDoc.setSubject(s('Assinatura eletronica avancada - ID '+manifesto.idAssinatura));
+      pdfDoc.setAuthor(s(manifesto.signatario.nome));
       pdfDoc.setProducer('Assinador Eletronico v'+CONFIG.versao);
       pdfDoc.setCreator('Assinador Eletronico v'+CONFIG.versao);
       pdfDoc.setKeywords([
