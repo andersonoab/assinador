@@ -674,10 +674,6 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   <button id="lgpd-ack">Entendi</button>
 </div>
 
-<div id="http-warn" style="display:none;background:#B71C1C;color:#fff;padding:10px 16px;font-size:.85rem;font-weight:600;text-align:center;">
-  Atencao: acesso via HTTP detectado. A assinatura requer HTTPS. Troque http:// por https:// no endereco.
-</div>
-
 <main>
 
   <!-- PROGRESS -->
@@ -1022,19 +1018,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   const binaryUtils = Object.freeze({
     dataURLtoBytes: function(d){const i=String(d).indexOf(',');if(i<0)throw new Error('DataURL invalida');const b=atob(d.slice(i+1));const a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;},
     bytesToBase64Utf8: function(s){return btoa(unescape(encodeURIComponent(String(s))));},
-    downloadBytes: function(b,n,m){
-      var bl=new Blob([b],{type:m});
-      // IE11 / Edge legado: usa msSaveBlob
-      if(window.navigator&&window.navigator.msSaveBlob){
-        window.navigator.msSaveBlob(bl,n);
-        return;
-      }
-      var u=URL.createObjectURL(bl);
-      var a=doc.createElement('a');
-      a.href=u;a.download=n;a.rel='noopener noreferrer';
-      doc.body.appendChild(a);a.click();doc.body.removeChild(a);
-      setTimeout(function(){URL.revokeObjectURL(u);},1500);
-    }
+    downloadBytes: function(b,n,m){const bl=new Blob([b],{type:m});const u=URL.createObjectURL(bl);const a=doc.createElement('a');a.href=u;a.download=n;a.rel='noopener noreferrer';doc.body.appendChild(a);a.click();doc.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},1500);}
   });
 
   /* ===== ID ===== */
@@ -1061,25 +1045,61 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   function setupSigCanvas(){
     const dpr=globalScope.devicePixelRatio||1;
     const r=sigCanvas.getBoundingClientRect();
-    sigCanvas.width=Math.floor(r.width*dpr);
-    sigCanvas.height=Math.floor(r.height*dpr);
+    // Garante dimensao minima — canvas em secao colapsada retorna 0
+    var w=Math.floor(r.width*dpr)||Math.floor(320*dpr);
+    var h=Math.floor(r.height*dpr)||Math.floor(100*dpr);
+    sigCanvas.width=w;
+    sigCanvas.height=h;
     sigCtx.setTransform(1,0,0,1,0,0);
     sigCtx.scale(dpr,dpr);
   }
   async function renderTextSignature(){
     const texto=doc.getElementById('sig-text').value.trim().slice(0,CONFIG.maxSigTextLen);
     const fonte=stateReader('selectedFont');
-    const r=sigCanvas.getBoundingClientRect();
-    sigCtx.clearRect(0,0,r.width,r.height);
     if(!texto){stateMutator('signatureDataUrl',null);atualizarOverlay();atualizarBotaoAssinar();return;}
+
+    // Se canvas nao tem dimensao (secao estava oculta), usar offscreen canvas
+    var renderW=sigCanvas.getBoundingClientRect().width||320;
+    var renderH=sigCanvas.getBoundingClientRect().height||100;
+    var dpr=globalScope.devicePixelRatio||1;
+    var needsSetup=(sigCanvas.width<4||sigCanvas.height<4);
+    if(needsSetup){
+      sigCanvas.width=Math.floor(renderW*dpr);
+      sigCanvas.height=Math.floor(renderH*dpr);
+      sigCtx.setTransform(1,0,0,1,0,0);
+      sigCtx.scale(dpr,dpr);
+    }
+
+    // Usar canvas offscreen para garantir PNG valido independente de visibilidade
+    var oc=doc.createElement('canvas');
+    oc.width=sigCanvas.width||Math.floor(renderW*dpr);
+    oc.height=sigCanvas.height||Math.floor(renderH*dpr);
+    var octx=oc.getContext('2d');
+    var cw=oc.width/dpr;
+    var ch=oc.height/dpr;
+    octx.scale(dpr,dpr);
+    octx.clearRect(0,0,cw,ch);
+
     try{await doc.fonts.load('48px "'+fonte+'"');}catch(e){}
-    let fs=48;
-    sigCtx.fillStyle='#003C64';
-    sigCtx.textBaseline='middle';
-    sigCtx.textAlign='center';
-    do{sigCtx.font=fs+'px "'+fonte+'", cursive';const w=sigCtx.measureText(texto).width;if(w<r.width-40)break;fs-=2;}while(fs>18);
-    sigCtx.fillText(texto,r.width/2,r.height/2-6);
-    stateMutator('signatureDataUrl',sigCanvas.toDataURL('image/png'));
+    var fs=48;
+    octx.fillStyle='#003C64';
+    octx.textBaseline='middle';
+    octx.textAlign='center';
+    do{octx.font=fs+'px "'+fonte+'", cursive';var tw=octx.measureText(texto).width;if(tw<cw-40)break;fs-=2;}while(fs>18);
+    octx.fillText(texto,cw/2,ch/2-6);
+
+    // Copiar para o canvas visivel tambem
+    sigCtx.clearRect(0,0,cw,ch);
+    sigCtx.drawImage(oc,0,0,cw,ch,0,0,cw,ch);
+
+    var dataUrl=oc.toDataURL('image/png');
+    // Validar que o dataURL e realmente um PNG (começa com iVBORw0KGgo)
+    var b64part=dataUrl.split(',')[1]||'';
+    if(b64part.length<20){
+      // Canvas em branco ou falhou — nao atualizar signatureDataUrl
+      return;
+    }
+    stateMutator('signatureDataUrl',dataUrl);
     atualizarOverlay();
     atualizarBotaoAssinar();
     atualizarProgressBar();
@@ -1474,14 +1494,22 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       const helvBold=await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const helvOblique=await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
+      const sigDataUrl=stateReader('signatureDataUrl');
+      if(!sigDataUrl||sigDataUrl.indexOf('data:image/png;base64,')<0){
+        throw new Error('Assinatura nao gerada corretamente. Abra o passo 3, digite o nome e aguarde a previa aparecer antes de assinar.');
+      }
+      var sigB64=sigDataUrl.split(',')[1]||'';
+      if(sigB64.length<20){
+        throw new Error('Imagem da assinatura invalida (muito pequena). Abra o passo 3 e redigite o nome da assinatura.');
+      }
+      const sigBytes=dataURLtoBytes(sigDataUrl);
+      const sigImage=await pdfDoc.embedPng(sigBytes);
+
       // Sanitiza texto para WinAnsi (Helvetica padrao nao suporta acentos)
       function s(t){
         if(t==null)return '';
         return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
       }
-
-      const sigBytes=dataURLtoBytes(stateReader('signatureDataUrl'));
-      const sigImage=await pdfDoc.embedPng(sigBytes);
 
       // Assinatura visual na pagina escolhida
       const sigPos=stateReader('sigPosition');
@@ -1547,13 +1575,13 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText('EVIDENCIAS TECNICAS DA ASSINATURA',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-40,y:y},color:primary,thickness:1.5});y-=18;
       const evid=[
-        ['ID da assinatura:',s(manifesto.idAssinatura)],
-        ['Data e hora:',s(manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')')],
-        ['Endereco IP:',s(manifesto.evidencias.ip)],
+        ['ID da assinatura:',manifesto.idAssinatura],
+        ['Data e hora:',manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')'],
+        ['Endereco IP:',manifesto.evidencias.ip],
         ['Dispositivo:',s(trunc(manifesto.evidencias.userAgent,75))],
-        ['Resolucao:',s(manifesto.evidencias.resolucaoTela)],
-        ['Estilo de assinatura:',s(manifesto.signatario.estiloAssinatura)],
-        ['Posicao (pagina):',s(String(manifesto.signatario.posicaoPagina))]
+        ['Resolucao:',manifesto.evidencias.resolucaoTela],
+        ['Estilo de assinatura:',manifesto.signatario.estiloAssinatura],
+        ['Posicao (pagina):',String(manifesto.signatario.posicaoPagina)]
       ];
       for(let i=0;i<evid.length;i++){
         page.drawText(evid[i][0],{x:40,y:y,size:8.5,font:helvBold,color:muted});
@@ -1589,7 +1617,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText('Assinatura eletronica avancada (nao qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
 
       pdfDoc.setTitle(s('Documento Assinado Eletronicamente - '+manifesto.signatario.nome));
-      pdfDoc.setSubject(s('Assinatura eletronica avancada - ID '+manifesto.idAssinatura));
+      pdfDoc.setSubject('Assinatura eletronica avancada - ID '+manifesto.idAssinatura);
       pdfDoc.setAuthor(s(manifesto.signatario.nome));
       pdfDoc.setProducer('Assinador Eletronico v'+CONFIG.versao);
       pdfDoc.setCreator('Assinador Eletronico v'+CONFIG.versao);
@@ -1617,10 +1645,6 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       btn.disabled=true;
       mostrarStatus('Processando assinatura...','info');
       try{
-        // Verificar contexto seguro (crypto.subtle exige HTTPS ou localhost)
-        if(!cryptoApi||!cryptoApi.subtle){
-          throw new Error('Assinatura requer HTTPS. Acesse o endereço com https:// (nao http://). Se for GitHub Pages, verifique o link.');
-        }
         const f=lerFormulario();
         if(!stateReader('pdfBuffer'))throw new Error('Nenhum PDF carregado.');
         if(!validators.nome(f.nome))throw new Error('Nome invalido. Informe nome completo.');
@@ -1689,17 +1713,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
         // scroll para o status
         doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
       }catch(err){
-        var emsg='falha desconhecida';
-        if(err){
-          if(err.message)emsg=err.message;
-          else if(err.name)emsg=err.name;
-          else if(typeof err==='string')emsg=err;
-          // crypto.subtle ausente (HTTP nao-seguro)
-          if(emsg.indexOf('Cannot read')>=0||emsg.indexOf('undefined')>=0||emsg.indexOf('subtle')>=0){
-            emsg='Crypto nao disponivel. Acesse via HTTPS (nao HTTP). Se estiver no GitHub Pages, use https://.';
-          }
-        }
-        mostrarStatus('Erro: '+emsg,'error');
+        mostrarStatus('Erro: '+(err&&err.message?err.message:'falha desconhecida'),'error');
         doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
         console.error(err);
       }finally{atualizarBotaoAssinar();}
@@ -1916,13 +1930,8 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   }
 
   function init(){
-    // Avisar sobre HTTP (crypto.subtle nao funciona em HTTP)
-    if(globalScope.location.protocol==='http:'&&globalScope.location.hostname!=='localhost'&&globalScope.location.hostname!=='127.0.0.1'){
-      var hw=doc.getElementById('http-warn');
-      if(hw)hw.style.display='block';
-    }
     if(!pdfLibRef||!qrcodeRef||!cryptoApi||!cryptoApi.subtle||!pdfjsRef){
-      mostrarStatus('Falha ao carregar dependencias. Se estiver em HTTP, mude para HTTPS. Verifique tambem sua conexao.','error');return;
+      mostrarStatus('Falha ao carregar dependencias. Verifique sua conexao.','error');return;
     }
     setupSigCanvas();
     bindEvents();
