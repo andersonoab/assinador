@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.ipify.org; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none';">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="Referrer-Policy" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<title>Assinador Eletrônico de Documentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{--primary:#0083CA;--primary-dark:#003C64;--accent:#7D0041;--text:#333;--muted:#646464;--border:#CCC;--bg:#FFF;--bg-soft:#F5F7FA;--ok:#2E7D32;--warn:#E65100;--danger:#C62828;--lgpd:#4A148C}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--text);background:var(--bg-soft);margin:0;line-height:1.5}
+  header{background:var(--primary);color:#fff;padding:20px 32px;display:flex;justify-content:space-between;align-items:center}
+  header h1{margin:0;font-size:1.25rem;font-weight:600;letter-spacing:.3px}
+  header .version{font-size:.75rem;opacity:.8}
+  #lgpd-banner{background:var(--lgpd);color:#fff;padding:12px 20px;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:16px}
+  #lgpd-banner strong{display:block;margin-bottom:2px}
+  #lgpd-banner a{color:#fff;text-decoration:underline;cursor:pointer}
+  #lgpd-banner button{background:#fff;color:var(--lgpd);border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:600;font-size:.8rem;white-space:nowrap;font-family:inherit}
+  main{max-width:1040px;margin:24px auto;padding:0 16px 48px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:20px}
+  .card h2{margin:0 0 16px;font-size:1.05rem;color:var(--primary-dark);font-weight:600;border-bottom:2px solid var(--primary);padding-bottom:8px}
+  .step-num{display:inline-block;width:24px;height:24px;background:var(--primary);color:#fff;border-radius:50%;text-align:center;line-height:24px;font-size:.85rem;margin-right:8px}
+  .dropzone{border:2px dashed var(--border);border-radius:6px;padding:32px;text-align:center;color:var(--muted);cursor:pointer;transition:all .2s}
+  .dropzone:hover,.dropzone.dragover{border-color:var(--primary);background:#F0F7FC;color:var(--primary-dark)}
+  .dropzone.has-file{border-style:solid;border-color:var(--ok);background:#F1F8F2;color:var(--ok)}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}
+  .form-row.full{grid-template-columns:1fr}
+  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px;font-weight:500}
+  input[type=text],input[type=email],input[type=tel]{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:4px;font-size:.95rem;font-family:inherit;transition:border-color .15s}
+  input:focus{outline:none;border-color:var(--primary)}
+  .canvas-wrap{border:1px solid var(--border);border-radius:4px;background:#fff;position:relative;height:180px;overflow:hidden}
+  #signature-canvas{display:block;width:100%;height:100%}
+  .canvas-line{position:absolute;bottom:30px;left:30px;right:30px;height:1px;background:var(--border);pointer-events:none}
+  .canvas-hint{position:absolute;bottom:8px;left:30px;font-size:.75rem;color:var(--muted);pointer-events:none}
+  .style-selector{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .style-option{flex:1;min-width:140px;border:1.5px solid var(--border);border-radius:4px;padding:10px 8px;cursor:pointer;text-align:center;background:#fff;transition:all .15s}
+  .style-option:hover{border-color:var(--primary)}
+  .style-option.active{border-color:var(--primary);background:#F0F7FC}
+  .style-option .preview{font-size:1.6rem;color:var(--primary-dark);line-height:1.2;pointer-events:none}
+  .style-option .name{font-size:.7rem;color:var(--muted);margin-top:2px;pointer-events:none}
+  .style-option:nth-child(1) .preview{font-family:"Dancing Script",cursive}
+  .style-option:nth-child(2) .preview{font-family:"Great Vibes",cursive}
+  .style-option:nth-child(3) .preview{font-family:"Caveat",cursive}
+  .btn{background:var(--primary);color:#fff;border:none;padding:11px 22px;border-radius:4px;cursor:pointer;font-size:.95rem;font-weight:500;font-family:inherit;transition:background .15s}
+  .btn:hover:not(:disabled){background:var(--primary-dark)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:7px 14px;font-size:.85rem;border-radius:4px;cursor:pointer;font-family:inherit}
+  .btn-ghost:hover{background:var(--bg-soft);color:var(--text)}
+  .accept-box{background:var(--bg-soft);border-left:3px solid var(--primary);padding:14px 16px;margin:12px 0;font-size:.85rem;color:var(--text);max-height:240px;overflow-y:auto}
+  .accept-box.lgpd{border-left-color:var(--lgpd);background:#F3E5F5}
+  .accept-box strong{color:var(--primary-dark);display:block;margin-bottom:6px}
+  .accept-box.lgpd strong{color:var(--lgpd)}
+  .checkbox-wrap{display:flex;align-items:flex-start;gap:10px;margin-top:14px}
+  .checkbox-wrap input{margin-top:3px;cursor:pointer}
+  .checkbox-wrap label{font-size:.9rem;color:var(--text);cursor:pointer}
+  .actions{display:flex;justify-content:space-between;align-items:center;padding-top:16px;border-top:1px solid var(--border);margin-top:8px;gap:12px;flex-wrap:wrap}
+  .status{font-size:.9rem;padding:12px 14px;border-radius:4px;margin-top:14px;display:none}
+  .status.show{display:block}
+  .status.success{background:#E8F5E9;color:var(--ok);border-left:3px solid var(--ok)}
+  .status.error{background:#FFEBEE;color:var(--danger);border-left:3px solid var(--danger)}
+  .status.info{background:#E3F2FD;color:var(--primary-dark);border-left:3px solid var(--primary)}
+  .meta-info{font-size:.8rem;color:var(--muted);margin-top:4px}
+  .legal{margin-top:24px;padding:16px 20px;background:#FAFAFA;border:1px solid var(--border);border-radius:4px;font-size:.8rem;color:var(--muted);line-height:1.6}
+  .legal strong{color:var(--text)}
+  .toolbar{text-align:right;margin-bottom:12px;font-size:.85rem}
+  .toolbar a{color:var(--primary);text-decoration:none;cursor:pointer}
+  .toolbar a:hover{text-decoration:underline}
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:20px}
+  .modal.show{display:flex}
+  .modal-content{background:#fff;border-radius:6px;width:100%;max-width:720px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .modal-header h3{margin:0;color:var(--primary-dark)}
+  .modal-body{padding:16px 20px;overflow-y:auto}
+  .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  table th,table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+  table th{background:var(--bg-soft);color:var(--muted);font-weight:600}
+  .empty-history{text-align:center;color:var(--muted);padding:24px;font-size:.9rem}
+  .hash-preview{font-family:ui-monospace,"SF Mono",monospace;font-size:.78rem;color:var(--muted);word-break:break-all}
+  /* POSICIONADOR */
+  .placeholder-pos{padding:40px;text-align:center;color:var(--muted);background:var(--bg-soft);border:1px dashed var(--border);border-radius:4px;font-size:.9rem}
+  .pos-controls{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-soft);border-radius:4px;margin-bottom:10px;flex-wrap:wrap}
+  .pos-controls button{background:#fff;border:1px solid var(--border);padding:5px 12px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.85rem}
+  .pos-controls button:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+  .pos-controls button:disabled{opacity:.4;cursor:not-allowed}
+  .pos-controls .info{flex:1;font-size:.85rem;color:var(--muted)}
+  .pos-controls input[type=range]{flex:1;min-width:120px;max-width:240px}
+  .pdf-wrap{background:#525659;padding:20px;border-radius:4px;text-align:center;max-height:600px;overflow:auto;position:relative}
+  .pdf-canvas-container{display:inline-block;position:relative;line-height:0;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  #pdf-canvas{display:block;background:#fff}
+  .sig-overlay{position:absolute;cursor:grab;border:2px dashed var(--primary);background:rgba(255,255,255,.7);touch-action:none;user-select:none}
+  .sig-overlay.dragging{cursor:grabbing;border-style:solid;border-color:var(--accent)}
+  .sig-overlay img{width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+  .sig-overlay .resize-handle{position:absolute;right:-8px;bottom:-8px;width:18px;height:18px;background:var(--primary);border:2px solid #fff;border-radius:50%;cursor:nwse-resize;touch-action:none}
+  .sig-overlay .label{position:absolute;top:-22px;left:0;background:var(--primary);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600;letter-spacing:.5px}
+  @media (max-width:640px){.form-row{grid-template-columns:1fr}main{padding:0 12px 32px}.card{padding:18px}header{padding:16px 20px}header h1{font-size:1.05rem}#lgpd-banner{flex-direction:column;align-items:flex-start}.pos-controls{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Assinador Eletrônico de Documentos</h1>
+  <div class="version">v2.1</div>
+</header>
+
+<div id="lgpd-banner">
+  <div>
+    <strong>Aviso de Tratamento de Dados Pessoais (LGPD)</strong>
+    Esta ferramenta coleta nome, CPF, celular, e-mail, cargo, endereço IP e dados do dispositivo para fins exclusivos de formalização da assinatura eletrônica. Veja a <a id="lgpd-details-link">descrição completa</a>.
+  </div>
+  <button id="lgpd-ack">Estou ciente</button>
+</div>
+
+<main>
+
+  <div class="toolbar">
+    <a id="link-historico">Histórico de assinaturas</a>
+    &nbsp;·&nbsp;
+    <a href="verificar.html">Validar um documento assinado</a>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">1</span>Documento a ser assinado</h2>
+    <input type="file" id="pdf-input" accept="application/pdf" style="display:none;">
+    <div class="dropzone" id="dropzone">
+      <div id="dropzone-text">
+        <strong>Clique aqui ou arraste o PDF</strong><br>
+        <span style="font-size:.85rem;">Apenas arquivos .pdf válidos, tamanho máximo 20 MB</span>
+      </div>
+    </div>
+    <div id="pdf-info" class="meta-info" style="margin-top:10px;display:none;"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">2</span>Identificação do signatário</h2>
+    <div class="form-row">
+      <div><label for="nome">Nome completo *</label><input type="text" id="nome" maxlength="100" autocomplete="name" placeholder="João da Silva Souza"></div>
+      <div><label for="cpf">CPF *</label><input type="text" id="cpf" maxlength="14" inputmode="numeric" placeholder="000.000.000-00"></div>
+    </div>
+    <div class="form-row">
+      <div><label for="celular">Celular *</label><input type="tel" id="celular" maxlength="15" inputmode="numeric" autocomplete="tel" placeholder="(11) 91234-5678"></div>
+      <div><label for="email">E-mail</label><input type="email" id="email" maxlength="100" autocomplete="email" placeholder="nome@empresa.com.br"></div>
+    </div>
+    <div class="form-row full">
+      <div><label for="cargo">Cargo / função</label><input type="text" id="cargo" maxlength="80" placeholder="Ex.: Analista de Atendimento"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">3</span>Assinatura</h2>
+    <div class="meta-info" style="margin-bottom:8px;">Digite seu nome abaixo para gerar a assinatura em estilo cursivo. Escolha o estilo que prefere.</div>
+    <input type="text" id="sig-text" maxlength="60" placeholder="Digite seu nome para a assinatura" autocomplete="off">
+    <div class="style-selector" id="style-selector">
+      <div class="style-option active" data-font="Dancing Script"><div class="preview">João Silva</div><div class="name">Estilo 1 - Cursiva moderna</div></div>
+      <div class="style-option" data-font="Great Vibes"><div class="preview">João Silva</div><div class="name">Estilo 2 - Cursiva elegante</div></div>
+      <div class="style-option" data-font="Caveat"><div class="preview">João Silva</div><div class="name">Estilo 3 - Manuscrita</div></div>
+    </div>
+    <div style="margin-top:14px;">
+      <label style="margin-bottom:6px;">Pré-visualização da assinatura</label>
+      <div class="canvas-wrap">
+        <canvas id="signature-canvas"></canvas>
+        <div class="canvas-line"></div>
+        <div class="canvas-hint">Assinatura</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">4</span>Posicionamento da assinatura</h2>
+    <div id="pos-placeholder" class="placeholder-pos">Carregue um PDF no passo 1 e gere a assinatura no passo 3 para posicionar.</div>
+    <div id="pos-area" style="display:none;">
+      <div class="pos-controls">
+        <button id="page-prev" type="button">&lsaquo; Página anterior</button>
+        <span class="info"><strong>Página <span id="page-current">1</span> de <span id="page-total">1</span></strong> &middot; arraste a assinatura para a posição desejada</span>
+        <button id="page-next" type="button">Próxima página &rsaquo;</button>
+      </div>
+      <div class="pos-controls">
+        <label style="margin:0;">Tamanho:</label>
+        <input type="range" id="sig-size" min="0.10" max="0.60" step="0.01" value="0.30">
+        <button id="btn-centralizar" type="button">Centralizar</button>
+        <button id="btn-rodape" type="button">Mover ao rodapé</button>
+      </div>
+      <div class="pdf-wrap">
+        <div class="pdf-canvas-container" id="pdf-canvas-container">
+          <canvas id="pdf-canvas"></canvas>
+          <div class="sig-overlay" id="sig-overlay">
+            <div class="label">Assinatura</div>
+            <img id="sig-overlay-img" alt="">
+            <div class="resize-handle" id="resize-handle"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step-num">5</span>Consentimento e termo de aceite</h2>
+    <div class="accept-box lgpd">
+      <strong>Tratamento de dados pessoais (Lei 13.709/2018 - LGPD)</strong>
+      Ao assinar este documento, autorizo o tratamento dos seguintes dados pessoais: nome completo, CPF, número de celular, e-mail, cargo, endereço IP, dados do dispositivo (navegador, sistema operacional, resolução de tela, fuso horário) e imagem da assinatura digitalizada. Finalidade: formalização eletrônica de documento trabalhista, com produção de prova de autoria e integridade. Bases legais: cumprimento de obrigação legal e regulatória pelo controlador (art. 7º, II), execução de contrato (art. 7º, V) e exercício regular de direitos em processo (art. 7º, VI) da LGPD. Compartilhamento: os dados ficam embutidos no próprio PDF assinado, que pode ser compartilhado com a área de Recursos Humanos, com órgãos fiscalizadores e em processos administrativos ou judiciais. Retenção: prazo prescricional trabalhista (cinco anos durante o contrato e dois anos após a rescisão, conforme art. 7º, XXIX, CF/88). Direitos do titular: confirmação, acesso, correção, anonimização, portabilidade e eliminação, observadas as exceções legais, mediante solicitação ao Encarregado de Dados da organização.
+    </div>
+    <div class="checkbox-wrap"><input type="checkbox" id="aceite-lgpd"><label for="aceite-lgpd">Li, compreendi e autorizo expressamente o tratamento dos meus dados pessoais nos termos acima.</label></div>
+    <div class="accept-box" style="margin-top:18px;">
+      <strong>Declaração de Aceite de Assinatura Eletrônica</strong>
+      Declaro, para todos os fins de direito, que tomei conhecimento integral do conteúdo do documento PDF anexado nesta sessão e o assino eletronicamente, com plena ciência de que esta assinatura, embora não emitida por certificado ICP-Brasil, constitui assinatura eletrônica avançada nos termos do artigo 10, §2º, da MP 2.200-2/2001, com identificação inequívoca do signatário, integridade do documento garantida por função criptográfica de resumo (SHA-256) e registro de trilha de auditoria (data, hora, equipamento, IP). Reconheço a validade jurídica do presente ato e dispenso a formalização por meio físico.
+    </div>
+    <div class="checkbox-wrap"><input type="checkbox" id="aceite-assinatura"><label for="aceite-assinatura">Li, compreendi e aceito o termo acima. Declaro que sou a pessoa identificada no passo 2 e que assino voluntariamente este documento.</label></div>
+  </div>
+
+  <div class="card">
+    <div class="actions">
+      <div class="meta-info">A assinatura visual será inserida na posição escolhida e uma <strong>página de certificado</strong> será adicionada como primeira página.</div>
+      <button class="btn" id="btn-assinar" disabled>Assinar e baixar PDF</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="legal">
+    <strong>Validade jurídica.</strong> Assinatura eletrônica avançada (não qualificada), válida nos termos do art. 10, §2º, da MP 2.200-2/2001 e da Lei 14.063/2020. A força probatória plena depende de prévia adesão das partes a este meio (recomenda-se Termo de Adesão à Assinatura Eletrônica entre empregador e empregado). Para atos que exijam fé pública ou certificação qualificada, utilize certificado ICP-Brasil.
+  </div>
+
+</main>
+
+<div id="history-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header"><h3>Histórico de assinaturas neste dispositivo</h3><button class="btn-ghost" id="btn-fechar-historico">Fechar</button></div>
+    <div class="modal-body" id="history-body"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" id="btn-exportar-historico">Exportar JSON</button>
+      <button class="btn-ghost" id="btn-limpar-historico" style="color:var(--danger);border-color:var(--danger);">Apagar histórico</button>
+    </div>
+  </div>
+</div>
+
+<div id="lgpd-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header"><h3 style="color:var(--lgpd);">Aviso de Privacidade e LGPD</h3><button class="btn-ghost" id="btn-fechar-lgpd">Fechar</button></div>
+    <div class="modal-body" id="lgpd-modal-body"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+(function bootstrapSigner(globalScope, doc, cryptoApi, pdfLibRef, qrcodeRef, pdfjsRef) {
+
+  /* ===== CONFIG ===== */
+  const CONFIG = Object.freeze({
+    versao: '2.1',
+    storageKey: 'asn_hist_v2',
+    storageLgpdKey: 'asn_lgpd_ack_v2',
+    maxFileSize: 20 * 1024 * 1024,
+    maxNomeLen: 100, maxEmailLen: 100, maxCargoLen: 80, maxSigTextLen: 60,
+    pdfMagic: Object.freeze([0x25, 0x50, 0x44, 0x46, 0x2D]),
+    fontsEnum: Object.freeze(['Dancing Script', 'Great Vibes', 'Caveat']),
+    cores: Object.freeze({
+      primary:[0,.514,.792], primaryDark:[0,.235,.392], text:[.2,.2,.2],
+      muted:[.4,.4,.4], lightBg:[.96,.97,.98], lgpd:[.29,.078,.549]
+    }),
+    ipifyUrl: 'https://api.ipify.org?format=json',
+    ipifyTimeoutMs: 3000,
+    pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+    pdfRenderScale: 1.5,
+    lgpdTextoCompleto: 'Esta ferramenta de assinatura eletrônica realiza tratamento dos seguintes dados pessoais do signatário: nome completo, CPF, número de celular, e-mail, cargo, endereço IP público, dados técnicos do dispositivo (user-agent do navegador, sistema operacional, resolução de tela, fuso horário e idioma) e imagem da assinatura digitalizada gerada a partir do texto digitado. A finalidade do tratamento é exclusivamente a formalização eletrônica do documento anexado, com produção de prova de autoria e integridade. As bases legais aplicáveis são as previstas no art. 7º da Lei 13.709/2018 (LGPD), incisos II (cumprimento de obrigação legal e regulatória), V (execução de contrato do qual o titular é parte) e VI (exercício regular de direitos em processo judicial, administrativo ou arbitral). Os dados são embutidos nos metadados do próprio PDF assinado e na página visual de assinatura, ficando sob guarda do signatário, do empregador e de terceiros legítimos a quem o documento for apresentado. O histórico local em localStorage permanece apenas neste navegador, podendo ser apagado pelo titular a qualquer momento na opção Apagar histórico. O signatário possui os direitos previstos no art. 18 da LGPD: confirmação da existência de tratamento, acesso, correção, anonimização, portabilidade e eliminação dos dados, observadas as exceções legais, em especial a guarda do PDF assinado durante o prazo prescricional trabalhista (cinco anos durante o contrato e dois anos após a rescisão, art. 7º, XXIX, CF/88). Para exercer qualquer direito, contate o Encarregado pelo Tratamento de Dados (DPO) da organização empregadora.'
+  });
+
+  /* ===== ESTADO ===== */
+  const state = Object.seal({
+    pdfBuffer: null, pdfName: null, pdfSize: null, pdfHashOriginal: null,
+    signatureDataUrl: null, selectedFont: CONFIG.fontsEnum[0], ip: null,
+    pdfJsDoc: null, currentPage: 0, totalPages: 0, pageViewport: null,
+    sigPosition: null // { pageIdx, xRatio, yRatio, widthRatio }
+  });
+  const stateMutator = function(k, v) { if (!(k in state)) throw new Error('estado'); state[k] = v; };
+  const stateReader = function(k) { return state[k]; };
+
+  /* ===== HELPERS ===== */
+  const helpers = Object.freeze({
+    escapeHtml: function(s){return String(s==null?'':s).replace(/[&<>"'/]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;'}[c]});},
+    truncar: function(s,n){if(!s)return '';const str=String(s);return str.length>n?str.slice(0,n-3)+'...':str;},
+    formatarTamanho: function(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(1)+' KB';return (b/1048576).toFixed(2)+' MB';},
+    mascararCPF: function(c){const n=String(c).replace(/\D/g,'');if(n.length!==11)return c;return n.slice(0,3)+'.'+n.slice(3,6)+'.***-'+n.slice(9);},
+    mascararCelular: function(c){const n=String(c).replace(/\D/g,'');if(n.length===11)return '('+n.slice(0,2)+') '+n.slice(2,7)+'-'+n.slice(7);if(n.length===10)return '('+n.slice(0,2)+') '+n.slice(2,6)+'-'+n.slice(6);return c;},
+    quebrarTexto: function(t,m){const p=String(t).split(/\s+/);const l=[];let a='';for(let i=0;i<p.length;i++){if((a+' '+p[i]).trim().length>m){if(a)l.push(a);a=p[i];}else{a=(a+' '+p[i]).trim();}}if(a)l.push(a);return l;},
+    formatarDataExtenso: function(d){const x=d instanceof Date?d:new Date(d);return x.toLocaleDateString('pt-BR')+' '+x.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+  });
+
+  /* ===== VALIDADORES ===== */
+  const validators = Object.freeze({
+    cpf: function(s){const c=String(s).replace(/\D/g,'');if(c.length!==11||/^(\d)\1+$/.test(c))return false;let so=0;for(let i=0;i<9;i++)so+=parseInt(c[i],10)*(10-i);let d1=(so*10)%11;if(d1===10)d1=0;if(d1!==parseInt(c[9],10))return false;so=0;for(let i=0;i<10;i++)so+=parseInt(c[i],10)*(11-i);let d2=(so*10)%11;if(d2===10)d2=0;return d2===parseInt(c[10],10);},
+    celular: function(s){const n=String(s).replace(/\D/g,'');if(n.length!==10&&n.length!==11)return false;const d=parseInt(n.slice(0,2),10);if(d<11||d>99)return false;if(n.length===11&&n[2]!=='9')return false;return true;},
+    email: function(s){if(!s)return true;return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)&&s.length<=CONFIG.maxEmailLen;},
+    nome: function(s){const n=String(s).trim();return n.length>=3&&n.length<=CONFIG.maxNomeLen&&/\s/.test(n)&&!/\d/.test(n);},
+    pdfMagicBytes: function(b){if(!b||b.byteLength<5)return false;const v=new Uint8Array(b,0,5);for(let i=0;i<5;i++)if(v[i]!==CONFIG.pdfMagic[i])return false;return true;}
+  });
+
+  /* ===== CRIPTO ===== */
+  const cryptoUtils = (function(subtle){
+    return Object.freeze({
+      hashBuffer: async function(b){const h=await subtle.digest('SHA-256',b);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');},
+      hashText: async function(t){const e=new TextEncoder().encode(String(t));const h=await subtle.digest('SHA-256',e);return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
+    });
+  })(cryptoApi.subtle);
+
+  /* ===== BINARY ===== */
+  const binaryUtils = Object.freeze({
+    dataURLtoBytes: function(d){const i=String(d).indexOf(',');if(i<0)throw new Error('DataURL inválida');const b=atob(d.slice(i+1));const a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;},
+    bytesToBase64Utf8: function(s){return btoa(unescape(encodeURIComponent(String(s))));},
+    downloadBytes: function(b,n,m){const bl=new Blob([b],{type:m});const u=URL.createObjectURL(bl);const a=doc.createElement('a');a.href=u;a.download=n;a.rel='noopener noreferrer';doc.body.appendChild(a);a.click();doc.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},1500);}
+  });
+
+  /* ===== ID ===== */
+  const gerarIdAssinatura = (function(rng){
+    return function(){const a=new Uint8Array(6);rng(a);const r=Array.from(a).map(function(b){return b.toString(16).padStart(2,'0');}).join('').toUpperCase();return 'SIG-'+Date.now().toString(36).toUpperCase()+'-'+r.slice(0,8);};
+  })(cryptoApi.getRandomValues.bind(cryptoApi));
+
+  /* ===== IP ===== */
+  const obterIP = (function(tm,url){
+    return async function(){
+      try{const ctrl=new AbortController();const tid=setTimeout(function(){ctrl.abort();},tm);const r=await fetch(url,{signal:ctrl.signal,referrerPolicy:'no-referrer',cache:'no-store'});clearTimeout(tid);if(!r.ok)return 'N/D';const j=await r.json();const ip=String(j.ip||'');if(/^(\d{1,3}\.){3}\d{1,3}$/.test(ip))return ip;if(/^[0-9a-fA-F:]+$/.test(ip)&&ip.indexOf(':')>=0)return ip;return 'N/D';}catch(e){return 'N/D';}
+    };
+  })(CONFIG.ipifyTimeoutMs, CONFIG.ipifyUrl);
+
+  /* ===== QR ===== */
+  const qrGen = (function(qr){
+    return function(t,sz){const q=qr(0,'M');q.addData(String(t));q.make();const mc=q.getModuleCount();const cs=Math.floor(sz/mc);const mg=Math.floor((sz-cs*mc)/2);const c=doc.createElement('canvas');c.width=sz;c.height=sz;const x=c.getContext('2d');x.fillStyle='#FFFFFF';x.fillRect(0,0,sz,sz);x.fillStyle='#000000';for(let r=0;r<mc;r++)for(let cc=0;cc<mc;cc++)if(q.isDark(r,cc))x.fillRect(mg+cc*cs,mg+r*cs,cs,cs);return c.toDataURL('image/png');};
+  })(qrcodeRef);
+
+  /* ===== CANVAS DE ASSINATURA (texto -> imagem) ===== */
+  const sigCanvas = doc.getElementById('signature-canvas');
+  const sigCtx = sigCanvas.getContext('2d');
+
+  function setupSigCanvas(){
+    const dpr=globalScope.devicePixelRatio||1;
+    const r=sigCanvas.getBoundingClientRect();
+    sigCanvas.width=Math.floor(r.width*dpr);
+    sigCanvas.height=Math.floor(r.height*dpr);
+    sigCtx.setTransform(1,0,0,1,0,0);
+    sigCtx.scale(dpr,dpr);
+  }
+  async function renderTextSignature(){
+    const texto=doc.getElementById('sig-text').value.trim().slice(0,CONFIG.maxSigTextLen);
+    const fonte=stateReader('selectedFont');
+    const r=sigCanvas.getBoundingClientRect();
+    sigCtx.clearRect(0,0,r.width,r.height);
+    if(!texto){stateMutator('signatureDataUrl',null);atualizarOverlay();atualizarBotaoAssinar();return;}
+    try{await doc.fonts.load('48px "'+fonte+'"');}catch(e){}
+    let fs=56;
+    sigCtx.fillStyle='#003C64';
+    sigCtx.textBaseline='middle';
+    sigCtx.textAlign='center';
+    do{sigCtx.font=fs+'px "'+fonte+'", cursive';const w=sigCtx.measureText(texto).width;if(w<r.width-80)break;fs-=2;}while(fs>22);
+    sigCtx.fillText(texto,r.width/2,r.height/2-10);
+    stateMutator('signatureDataUrl',sigCanvas.toDataURL('image/png'));
+    atualizarOverlay();
+    atualizarBotaoAssinar();
+  }
+
+  /* ===== POSICIONADOR (PDF.js + drag overlay) ===== */
+  pdfjsRef.GlobalWorkerOptions.workerSrc = CONFIG.pdfjsWorker;
+  const pdfCanvas = doc.getElementById('pdf-canvas');
+  const pdfCtx = pdfCanvas.getContext('2d');
+  const overlay = doc.getElementById('sig-overlay');
+  const overlayImg = doc.getElementById('sig-overlay-img');
+  const resizeHandle = doc.getElementById('resize-handle');
+
+  async function carregarPdfJs(){
+    if(!stateReader('pdfBuffer'))return;
+    try{
+      const copy=stateReader('pdfBuffer').slice(0);
+      const task=pdfjsRef.getDocument({data:copy});
+      const doc2=await task.promise;
+      stateMutator('pdfJsDoc',doc2);
+      stateMutator('totalPages',doc2.numPages);
+      stateMutator('currentPage',doc2.numPages-1);
+      stateMutator('sigPosition',{pageIdx:doc2.numPages-1,xRatio:.5,yRatio:.85,widthRatio:.3});
+      doc.getElementById('page-total').textContent=doc2.numPages;
+      doc.getElementById('pos-placeholder').style.display='none';
+      doc.getElementById('pos-area').style.display='block';
+      await renderizarPagina(doc2.numPages-1);
+    }catch(e){
+      mostrarStatus('Erro ao carregar PDF para visualização: '+e.message,'error');
+    }
+  }
+
+  async function renderizarPagina(idx){
+    const d=stateReader('pdfJsDoc');
+    if(!d)return;
+    const page=await d.getPage(idx+1);
+    const viewport=page.getViewport({scale:CONFIG.pdfRenderScale});
+    pdfCanvas.width=viewport.width;
+    pdfCanvas.height=viewport.height;
+    pdfCanvas.style.width=viewport.width+'px';
+    pdfCanvas.style.height=viewport.height+'px';
+    await page.render({canvasContext:pdfCtx,viewport:viewport}).promise;
+    stateMutator('currentPage',idx);
+    stateMutator('pageViewport',{width:viewport.width,height:viewport.height});
+    doc.getElementById('page-current').textContent=idx+1;
+    doc.getElementById('page-prev').disabled=(idx<=0);
+    doc.getElementById('page-next').disabled=(idx>=stateReader('totalPages')-1);
+    atualizarOverlay();
+  }
+
+  function atualizarOverlay(){
+    const sig=stateReader('signatureDataUrl');
+    const pos=stateReader('sigPosition');
+    const vp=stateReader('pageViewport');
+    if(!sig||!pos||!vp){overlay.style.display='none';return;}
+    if(pos.pageIdx!==stateReader('currentPage')){overlay.style.display='none';return;}
+    overlay.style.display='block';
+    overlayImg.src=sig;
+    const w=vp.width*pos.widthRatio;
+    const aspect=parseFloat(sigCanvas.height/sigCanvas.width)||0.5;
+    const h=w*aspect;
+    const x=vp.width*pos.xRatio-w/2;
+    const y=vp.height*pos.yRatio-h/2;
+    overlay.style.left=x+'px';
+    overlay.style.top=y+'px';
+    overlay.style.width=w+'px';
+    overlay.style.height=h+'px';
+  }
+
+  // Drag
+  let isDragging=false;
+  let isResizing=false;
+  let dragStartX=0,dragStartY=0,initialX=0,initialY=0,initialW=0;
+
+  overlay.addEventListener('pointerdown',function(e){
+    if(e.target===resizeHandle){isResizing=true;}else{isDragging=true;}
+    overlay.classList.add('dragging');
+    overlay.setPointerCapture(e.pointerId);
+    dragStartX=e.clientX;dragStartY=e.clientY;
+    const rect=overlay.getBoundingClientRect();
+    const containerRect=doc.getElementById('pdf-canvas-container').getBoundingClientRect();
+    initialX=rect.left-containerRect.left;
+    initialY=rect.top-containerRect.top;
+    initialW=rect.width;
+    e.preventDefault();
+  });
+  overlay.addEventListener('pointermove',function(e){
+    if(!isDragging&&!isResizing)return;
+    const vp=stateReader('pageViewport');
+    const pos=stateReader('sigPosition');
+    if(!vp||!pos)return;
+    const dx=e.clientX-dragStartX;
+    const dy=e.clientY-dragStartY;
+    if(isResizing){
+      const newW=Math.max(40,Math.min(vp.width*0.8,initialW+dx));
+      const widthRatio=newW/vp.width;
+      stateMutator('sigPosition',Object.assign({},pos,{widthRatio:widthRatio}));
+    }else{
+      const aspect=parseFloat(sigCanvas.height/sigCanvas.width)||0.5;
+      const w=vp.width*pos.widthRatio;
+      const h=w*aspect;
+      let newX=initialX+dx;
+      let newY=initialY+dy;
+      newX=Math.max(0,Math.min(vp.width-w,newX));
+      newY=Math.max(0,Math.min(vp.height-h,newY));
+      const xRatio=(newX+w/2)/vp.width;
+      const yRatio=(newY+h/2)/vp.height;
+      stateMutator('sigPosition',Object.assign({},pos,{xRatio:xRatio,yRatio:yRatio}));
+    }
+    atualizarOverlay();
+  });
+  overlay.addEventListener('pointerup',function(e){
+    isDragging=false;isResizing=false;
+    overlay.classList.remove('dragging');
+    try{overlay.releasePointerCapture(e.pointerId);}catch(err){}
+  });
+  overlay.addEventListener('pointercancel',function(){isDragging=false;isResizing=false;overlay.classList.remove('dragging');});
+
+  /* ===== STATUS ===== */
+  function mostrarStatus(msg,tipo){
+    const s=doc.getElementById('status');
+    s.textContent=String(msg);
+    s.className='status show '+tipo;
+    if(tipo!=='success')setTimeout(function(){s.classList.remove('show');},7000);
+  }
+
+  /* ===== FORM ===== */
+  function lerFormulario(){
+    return {
+      nome:doc.getElementById('nome').value.trim().slice(0,CONFIG.maxNomeLen),
+      cpf:doc.getElementById('cpf').value.trim(),
+      celular:doc.getElementById('celular').value.trim(),
+      email:doc.getElementById('email').value.trim().slice(0,CONFIG.maxEmailLen),
+      cargo:doc.getElementById('cargo').value.trim().slice(0,CONFIG.maxCargoLen),
+      sigText:doc.getElementById('sig-text').value.trim().slice(0,CONFIG.maxSigTextLen),
+      aceiteLgpd:doc.getElementById('aceite-lgpd').checked,
+      aceiteAssinatura:doc.getElementById('aceite-assinatura').checked
+    };
+  }
+  function atualizarBotaoAssinar(){
+    const f=lerFormulario();
+    const pronto=stateReader('pdfBuffer')!==null
+      &&validators.nome(f.nome)&&validators.cpf(f.cpf)&&validators.celular(f.celular)
+      &&validators.email(f.email)&&f.sigText.length>=2
+      &&stateReader('signatureDataUrl')!==null
+      &&stateReader('sigPosition')!==null
+      &&f.aceiteLgpd&&f.aceiteAssinatura;
+    doc.getElementById('btn-assinar').disabled=!pronto;
+  }
+  function mascararCpfInput(e){
+    let v=e.target.value.replace(/\D/g,'').slice(0,11);
+    v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    e.target.value=v;
+    atualizarBotaoAssinar();
+  }
+  function mascararCelularInput(e){
+    let v=e.target.value.replace(/\D/g,'').slice(0,11);
+    if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{0,4})/,'($1) $2-$3').replace(/-$/,'');
+    else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3').replace(/-$/,'');
+    else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2').replace(/ $/,'');
+    else if(v.length>0)v='('+v;
+    e.target.value=v;
+    atualizarBotaoAssinar();
+  }
+
+  /* ===== UPLOAD ===== */
+  const handlePdfUpload = (function(validatePdf, hashFn, sizeFn){
+    return async function(file){
+      if(!file)return;
+      if(file.type!=='application/pdf')return mostrarStatus('Arquivo inválido. Selecione um PDF.','error');
+      if(file.size>CONFIG.maxFileSize)return mostrarStatus('Arquivo excede o limite de 20 MB.','error');
+      try{
+        const buffer=await file.arrayBuffer();
+        if(!validatePdf(buffer))return mostrarStatus('O arquivo não é um PDF válido (assinatura binária ausente).','error');
+        const hash=await hashFn(buffer);
+        stateMutator('pdfBuffer',buffer);
+        stateMutator('pdfName',String(file.name).slice(0,200));
+        stateMutator('pdfSize',file.size);
+        stateMutator('pdfHashOriginal',hash);
+        const dz=doc.getElementById('dropzone');
+        const dzT=doc.getElementById('dropzone-text');
+        dz.classList.add('has-file');
+        dzT.textContent='';
+        const st=doc.createElement('strong');st.textContent=file.name;
+        const sp=doc.createElement('span');sp.style.fontSize='.85rem';sp.textContent=' '+sizeFn(file.size)+' - clique para trocar';
+        dzT.appendChild(st);dzT.appendChild(doc.createElement('br'));dzT.appendChild(sp);
+        const info=doc.getElementById('pdf-info');
+        info.style.display='block';info.textContent='';
+        const lb=doc.createElement('span');lb.textContent='Hash SHA-256 do documento: ';
+        const cd=doc.createElement('span');cd.className='hash-preview';cd.textContent=hash;
+        info.appendChild(lb);info.appendChild(cd);
+        atualizarBotaoAssinar();
+        await carregarPdfJs();
+      }catch(err){mostrarStatus('Erro ao processar PDF: '+err.message,'error');}
+    };
+  })(validators.pdfMagicBytes, cryptoUtils.hashBuffer, helpers.formatarTamanho);
+
+  /* ===== CONSTRUIR PDF ASSINADO ===== */
+  const construirPDFAssinado = (function(libs){
+    const pdfLib=libs.pdfLib, dataURLtoBytes=libs.dataURLtoBytes, qrFn=libs.qrFn;
+    const trunc=libs.trunc, quebrar=libs.quebrar, fmtData=libs.fmtData, b64Utf8=libs.b64Utf8;
+
+    return async function(manifesto){
+      const PDFDocument=pdfLib.PDFDocument, rgb=pdfLib.rgb, StandardFonts=pdfLib.StandardFonts;
+      const pdfDoc=await PDFDocument.load(stateReader('pdfBuffer'));
+      const helv=await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helvBold=await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const helvOblique=await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+
+      // Embed da imagem da assinatura (usada nas duas inserções)
+      const sigBytes=dataURLtoBytes(stateReader('signatureDataUrl'));
+      const sigImage=await pdfDoc.embedPng(sigBytes);
+
+      // 1) Aplicar assinatura visual na página escolhida pelo usuário (índice no PDF ORIGINAL)
+      const sigPos=stateReader('sigPosition');
+      if(sigPos){
+        const allPages=pdfDoc.getPages();
+        const targetIdx=sigPos.pageIdx; // ainda não inserimos o certificado
+        if(targetIdx>=0&&targetIdx<allPages.length){
+          const tp=allPages[targetIdx];
+          const ps=tp.getSize();
+          const sigW=ps.width*sigPos.widthRatio;
+          const sigH=sigW*(sigImage.height/sigImage.width);
+          const pdfX=ps.width*sigPos.xRatio-sigW/2;
+          // PDF.js Y cresce para baixo, pdf-lib Y cresce para cima
+          const pdfY=ps.height*(1-sigPos.yRatio)-sigH/2;
+          tp.drawImage(sigImage,{x:pdfX,y:pdfY,width:sigW,height:sigH});
+        }
+      }
+
+      // 2) Página de CERTIFICADO como PRIMEIRA página
+      const page=pdfDoc.insertPage(0,[595.28,841.89]);
+      const sz=page.getSize();
+      const width=sz.width, height=sz.height;
+      const c=CONFIG.cores;
+      const primary=rgb(c.primary[0],c.primary[1],c.primary[2]);
+      const primaryDark=rgb(c.primaryDark[0],c.primaryDark[1],c.primaryDark[2]);
+      const textColor=rgb(c.text[0],c.text[1],c.text[2]);
+      const muted=rgb(c.muted[0],c.muted[1],c.muted[2]);
+      const lightBg=rgb(c.lightBg[0],c.lightBg[1],c.lightBg[2]);
+      const white=rgb(1,1,1);
+      const lgpdColor=rgb(c.lgpd[0],c.lgpd[1],c.lgpd[2]);
+
+      page.drawRectangle({x:0,y:height-70,width:width,height:70,color:primary});
+      page.drawText('CERTIFICADO DE ASSINATURA ELETRÔNICA',{x:40,y:height-38,size:16,font:helvBold,color:white});
+      page.drawText('Documento assinado nos termos da MP 2.200-2/2001 e da Lei 14.063/2020',{x:40,y:height-58,size:8.5,font:helv,color:white});
+
+      page.drawRectangle({x:width-165,y:height-220,width:130,height:80,borderColor:primary,borderWidth:2,color:white});
+      page.drawText('ASSINADO',{x:width-156,y:height-175,size:16,font:helvBold,color:primary});
+      page.drawText('ELETRONICAMENTE',{x:width-156,y:height-192,size:8,font:helvBold,color:primary});
+      page.drawText(fmtData(new Date(manifesto.timestampISO)),{x:width-156,y:height-208,size:7,font:helv,color:muted});
+
+      let y=height-110;
+      page.drawText('DADOS DO SIGNATÁRIO',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
+      y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-180,y:y},color:primary,thickness:1.5});y-=18;
+      const campos=[
+        ['Nome:',manifesto.signatario.nome],
+        ['CPF:',manifesto.signatario.cpf],
+        ['Celular:',manifesto.signatario.celular],
+        ['Cargo:',manifesto.signatario.cargo||'-'],
+        ['E-mail:',manifesto.signatario.email||'-']
+      ];
+      for(let i=0;i<campos.length;i++){
+        page.drawText(campos[i][0],{x:40,y:y,size:9,font:helvBold,color:muted});
+        page.drawText(String(campos[i][1]),{x:110,y:y,size:10,font:helv,color:textColor});
+        y-=16;
+      }
+
+      y-=8;page.drawText('ASSINATURA DIGITALIZADA',{x:40,y:y,size:9,font:helvBold,color:muted});y-=6;
+      const sigW2=260;const sigH2=(sigImage.height/sigImage.width)*sigW2;
+      page.drawRectangle({x:40,y:y-sigH2-8,width:sigW2+16,height:sigH2+16,color:lightBg,borderColor:rgb(.85,.85,.85),borderWidth:.5});
+      page.drawImage(sigImage,{x:48,y:y-sigH2,width:sigW2,height:sigH2});
+      page.drawLine({start:{x:48,y:y-sigH2-2},end:{x:48+sigW2,y:y-sigH2-2},color:rgb(.5,.5,.5),thickness:.5});
+      y-=sigH2+28;
+
+      page.drawText('EVIDÊNCIAS TÉCNICAS DA ASSINATURA',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
+      y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-40,y:y},color:primary,thickness:1.5});y-=18;
+      const evid=[
+        ['ID da assinatura:',manifesto.idAssinatura],
+        ['Data e hora:',manifesto.timestampLocal+' ('+manifesto.evidencias.fusoHorario+')'],
+        ['Endereço IP:',manifesto.evidencias.ip],
+        ['Dispositivo:',trunc(manifesto.evidencias.userAgent,75)],
+        ['Resolução:',manifesto.evidencias.resolucaoTela],
+        ['Estilo de assinatura:',manifesto.signatario.estiloAssinatura],
+        ['Posição (página):',String(manifesto.signatario.posicaoPagina)]
+      ];
+      for(let i=0;i<evid.length;i++){
+        page.drawText(evid[i][0],{x:40,y:y,size:8.5,font:helvBold,color:muted});
+        page.drawText(String(evid[i][1]),{x:200,y:y,size:9,font:helv,color:textColor});
+        y-=14;
+      }
+      page.drawText('Hash SHA-256 do documento original:',{x:40,y:y,size:8.5,font:helvBold,color:muted});y-=12;
+      page.drawText(manifesto.documento.hashSHA256Original,{x:40,y:y,size:7.5,font:helv,color:textColor});y-=16;
+      page.drawText('Arquivo original: '+trunc(manifesto.documento.nomeOriginal,60),{x:40,y:y,size:8,font:helvOblique,color:muted});y-=22;
+
+      const baseUrl=globalScope.location.href.replace(/[?#].*$/,'').replace(/\/[^\/]*$/,'/');
+      const verifUrl=baseUrl+'verificar.html?id='+encodeURIComponent(manifesto.idAssinatura);
+      const qrPng=qrFn(verifUrl,300);
+      const qrBytes=dataURLtoBytes(qrPng);
+      const qrImage=await pdfDoc.embedPng(qrBytes);
+      const qrSize=90;
+      page.drawImage(qrImage,{x:width-qrSize-40,y:110,width:qrSize,height:qrSize});
+      page.drawText('Verifique este documento:',{x:width-qrSize-40,y:102,size:7.5,font:helvBold,color:muted});
+      page.drawText('Aponte a câmera ou acesse',{x:width-qrSize-40,y:92,size:7,font:helv,color:muted});
+      page.drawText(trunc(verifUrl,40),{x:width-qrSize-40,y:82,size:6.5,font:helv,color:primary});
+
+      page.drawText('TRATAMENTO DE DADOS PESSOAIS (LGPD)',{x:40,y:y,size:9,font:helvBold,color:lgpdColor});y-=12;
+      const lgpdResumo='Signatário autorizou o tratamento dos dados pessoais aqui registrados, nos termos da Lei 13.709/2018, art. 7º, incisos II, V e VI, para fins de formalização eletrônica do documento.';
+      const linhasLgpd=quebrar(lgpdResumo,95);
+      for(let i=0;i<linhasLgpd.length;i++){page.drawText(linhasLgpd[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
+      y-=6;page.drawText('TERMO DE ACEITE CONFIRMADO',{x:40,y:y,size:9,font:helvBold,color:primaryDark});y-=12;
+      const aceiteResumo='Signatário declarou ciência integral do conteúdo do documento, identificou-se conforme dados acima e firmou assinatura eletrônica avançada, dispensando formalização física.';
+      const linhasAceite=quebrar(aceiteResumo,95);
+      for(let i=0;i<linhasAceite.length;i++){page.drawText(linhasAceite[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
+
+      page.drawRectangle({x:0,y:0,width:width,height:35,color:primaryDark});
+      page.drawText('Fundamento legal: MP 2.200-2/2001, art. 10, §2º - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
+      page.drawText('Assinatura eletrônica avançada (não qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
+
+      pdfDoc.setTitle('Documento Assinado Eletronicamente - '+manifesto.signatario.nome);
+      pdfDoc.setSubject('Assinatura eletrônica avançada - ID '+manifesto.idAssinatura);
+      pdfDoc.setAuthor(manifesto.signatario.nome);
+      pdfDoc.setProducer('Assinador Eletrônico v'+CONFIG.versao);
+      pdfDoc.setCreator('Assinador Eletrônico v'+CONFIG.versao);
+      pdfDoc.setKeywords([
+        'ASSINATURA_ELETRONICA',
+        'ID:'+manifesto.idAssinatura,
+        'HASH_ORIGINAL:'+manifesto.documento.hashSHA256Original,
+        'CARIMBO_POSICAO:0',
+        'MANIFESTO_B64:'+b64Utf8(JSON.stringify(manifesto))
+      ]);
+      return await pdfDoc.save();
+    };
+  })({
+    pdfLib:pdfLibRef, dataURLtoBytes:binaryUtils.dataURLtoBytes, qrFn:qrGen,
+    trunc:helpers.truncar, quebrar:helpers.quebrarTexto,
+    fmtData:helpers.formatarDataExtenso, b64Utf8:binaryUtils.bytesToBase64Utf8
+  });
+
+  /* ===== EXECUTAR ===== */
+  const executarAssinatura = (function(deps){
+    const hashText=deps.hashText, hashBuffer=deps.hashBuffer, getIp=deps.getIp;
+    const newId=deps.newId, builder=deps.builder, downloader=deps.downloader;
+    return async function(){
+      const btn=doc.getElementById('btn-assinar');
+      btn.disabled=true;
+      mostrarStatus('Processando assinatura...','info');
+      try{
+        const f=lerFormulario();
+        if(!stateReader('pdfBuffer'))throw new Error('Nenhum PDF carregado.');
+        if(!validators.nome(f.nome))throw new Error('Nome inválido. Informe nome completo.');
+        if(!validators.cpf(f.cpf))throw new Error('CPF inválido.');
+        if(!validators.celular(f.celular))throw new Error('Celular inválido.');
+        if(!validators.email(f.email))throw new Error('E-mail em formato inválido.');
+        if(f.sigText.length<2)throw new Error('Digite o nome para gerar a assinatura.');
+        if(!stateReader('signatureDataUrl'))throw new Error('Assinatura não foi gerada.');
+        if(!stateReader('sigPosition'))throw new Error('Posicione a assinatura no documento.');
+        if(!f.aceiteLgpd)throw new Error('É necessário autorizar o tratamento de dados (LGPD).');
+        if(!f.aceiteAssinatura)throw new Error('É necessário aceitar o termo de assinatura.');
+
+        const cpfNumeros=f.cpf.replace(/\D/g,'');
+        const celularNumeros=f.celular.replace(/\D/g,'');
+        const ip=await getIp();stateMutator('ip',ip);
+        const agora=new Date();
+        const idAssinatura=newId();
+        const userAgent=String(navigator.userAgent||'N/D').slice(0,250);
+        const fusoHorario=Intl.DateTimeFormat().resolvedOptions().timeZone||'N/D';
+        const sigPos=stateReader('sigPosition');
+
+        const manifesto={
+          versao:CONFIG.versao,
+          idAssinatura:idAssinatura,
+          timestampISO:agora.toISOString(),
+          timestampLocal:agora.toLocaleString('pt-BR'),
+          documento:{
+            nomeOriginal:stateReader('pdfName'),
+            tamanhoBytes:stateReader('pdfSize'),
+            hashSHA256Original:stateReader('pdfHashOriginal')
+          },
+          signatario:{
+            nome:f.nome,
+            cpf:helpers.mascararCPF(cpfNumeros),
+            cpfHashSHA256:await hashText(cpfNumeros),
+            celular:helpers.mascararCelular(celularNumeros),
+            email:f.email||null,
+            cargo:f.cargo||null,
+            estiloAssinatura:stateReader('selectedFont'),
+            textoAssinatura:f.sigText,
+            posicaoPagina:sigPos.pageIdx+1,
+            posicaoCoordenadas:{xRatio:sigPos.xRatio,yRatio:sigPos.yRatio,widthRatio:sigPos.widthRatio}
+          },
+          evidencias:{
+            ip:ip,
+            userAgent:userAgent,
+            idioma:navigator.language||'N/D',
+            fusoHorario:fusoHorario,
+            resolucaoTela:screen.width+'x'+screen.height,
+            cookieEnabled:navigator.cookieEnabled===true
+          },
+          aceite:{
+            confirmadoAssinatura:true,
+            confirmadoLgpd:true,
+            timestampAceite:agora.toISOString(),
+            fundamentoLegal:'MP 2.200-2/2001, art. 10, §2º; Lei 14.063/2020; LGPD 13.709/2018, art. 7º, II, V, VI'
+          }
+        };
+
+        const pdfBytes=await builder(manifesto);
+        manifesto.documento.hashSHA256Assinado=await hashBuffer(pdfBytes.buffer);
+        salvarHistorico(manifesto);
+        const nomeArq=String(stateReader('pdfName')).replace(/\.pdf$/i,'')+'_ASSINADO.pdf';
+        downloader(pdfBytes,nomeArq,'application/pdf');
+        mostrarStatus('Documento assinado com sucesso. Arquivo baixado: '+nomeArq,'success');
+      }catch(err){
+        mostrarStatus('Erro: '+(err&&err.message?err.message:'falha desconhecida'),'error');
+        console.error(err);
+      }finally{atualizarBotaoAssinar();}
+    };
+  })({
+    hashText:cryptoUtils.hashText, hashBuffer:cryptoUtils.hashBuffer,
+    getIp:obterIP, newId:gerarIdAssinatura, builder:construirPDFAssinado,
+    downloader:binaryUtils.downloadBytes
+  });
+
+  /* ===== HISTÓRICO ===== */
+  function salvarHistorico(m){
+    try{
+      const raw=localStorage.getItem(CONFIG.storageKey)||'[]';
+      const p=JSON.parse(raw);const lista=Array.isArray(p)?p:[];
+      lista.unshift({id:m.idAssinatura,nome:m.signatario.nome,cpf:m.signatario.cpf,celular:m.signatario.celular,documento:m.documento.nomeOriginal,timestamp:m.timestampISO,hash:m.documento.hashSHA256Original});
+      if(lista.length>200)lista.length=200;
+      localStorage.setItem(CONFIG.storageKey,JSON.stringify(lista));
+    }catch(e){console.warn('hist:',e);}
+  }
+  function abrirHistorico(){
+    let lista=[];
+    try{const raw=localStorage.getItem(CONFIG.storageKey)||'[]';const p=JSON.parse(raw);if(Array.isArray(p))lista=p;}catch(e){}
+    const body=doc.getElementById('history-body');body.textContent='';
+    if(lista.length===0){
+      const e=doc.createElement('div');e.className='empty-history';e.textContent='Nenhuma assinatura registrada neste dispositivo.';body.appendChild(e);
+    }else{
+      const tb=doc.createElement('table');
+      const th=doc.createElement('thead');const tr1=doc.createElement('tr');
+      ['Data','Signatário','Documento','ID'].forEach(function(t){const x=doc.createElement('th');x.textContent=t;tr1.appendChild(x);});
+      th.appendChild(tr1);tb.appendChild(th);
+      const tbd=doc.createElement('tbody');
+      for(let i=0;i<lista.length;i++){
+        const it=lista[i];const tr=doc.createElement('tr');
+        const tdD=doc.createElement('td');tdD.textContent=new Date(it.timestamp).toLocaleString('pt-BR');
+        const tdN=doc.createElement('td');tdN.textContent=String(it.nome||'');
+        const sm=doc.createElement('small');sm.style.color='var(--muted)';sm.style.display='block';
+        sm.textContent=(it.cpf||'')+' - '+(it.celular||'');tdN.appendChild(sm);
+        const tdDc=doc.createElement('td');tdDc.textContent=String(it.documento||'-');
+        const tdI=doc.createElement('td');const cd=doc.createElement('code');cd.style.fontSize='.72rem';cd.textContent=String(it.id||'');tdI.appendChild(cd);
+        tr.appendChild(tdD);tr.appendChild(tdN);tr.appendChild(tdDc);tr.appendChild(tdI);
+        tbd.appendChild(tr);
+      }
+      tb.appendChild(tbd);body.appendChild(tb);
+    }
+    doc.getElementById('history-modal').classList.add('show');
+  }
+  function fecharHistorico(){doc.getElementById('history-modal').classList.remove('show');}
+  function exportarHistorico(){
+    const d=localStorage.getItem(CONFIG.storageKey)||'[]';
+    const b=new TextEncoder().encode(d);
+    binaryUtils.downloadBytes(b,'historico_assinaturas_'+new Date().toISOString().slice(0,10)+'.json','application/json');
+  }
+  function limparHistorico(){
+    if(confirm('Apagar todo o histórico armazenado neste navegador?')){
+      localStorage.removeItem(CONFIG.storageKey);abrirHistorico();
+    }
+  }
+
+  /* ===== LGPD ===== */
+  function abrirLgpdModal(){
+    const body=doc.getElementById('lgpd-modal-body');body.textContent='';
+    const p=doc.createElement('p');p.style.fontSize='.9rem';p.style.lineHeight='1.7';p.textContent=CONFIG.lgpdTextoCompleto;
+    body.appendChild(p);doc.getElementById('lgpd-modal').classList.add('show');
+  }
+  function fecharLgpdModal(){doc.getElementById('lgpd-modal').classList.remove('show');}
+  function ocultarBanner(){
+    try{localStorage.setItem(CONFIG.storageLgpdKey,'1');}catch(e){}
+    doc.getElementById('lgpd-banner').style.display='none';
+  }
+  function inicializarBannerLgpd(){
+    try{if(localStorage.getItem(CONFIG.storageLgpdKey)==='1')doc.getElementById('lgpd-banner').style.display='none';}catch(e){}
+  }
+
+  /* ===== BINDING ===== */
+  function bindEvents(){
+    const dz=doc.getElementById('dropzone');
+    const pdfInput=doc.getElementById('pdf-input');
+    dz.addEventListener('click',function(){pdfInput.click();});
+    ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add('dragover');});});
+    ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove('dragover');});});
+    dz.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files[0])handlePdfUpload(e.dataTransfer.files[0]);});
+    pdfInput.addEventListener('change',function(e){if(e.target.files[0])handlePdfUpload(e.target.files[0]);});
+
+    doc.getElementById('cpf').addEventListener('input',mascararCpfInput);
+    doc.getElementById('celular').addEventListener('input',mascararCelularInput);
+    ['nome','email','cargo'].forEach(function(id){doc.getElementById(id).addEventListener('input',atualizarBotaoAssinar);});
+    doc.getElementById('aceite-lgpd').addEventListener('change',atualizarBotaoAssinar);
+    doc.getElementById('aceite-assinatura').addEventListener('change',atualizarBotaoAssinar);
+    doc.getElementById('sig-text').addEventListener('input',renderTextSignature);
+
+    const ss=doc.getElementById('style-selector');
+    ss.addEventListener('click',function(e){
+      const op=e.target.closest('.style-option');if(!op)return;
+      const ft=op.getAttribute('data-font');if(CONFIG.fontsEnum.indexOf(ft)<0)return;
+      const all=doc.querySelectorAll('.style-option');
+      for(let i=0;i<all.length;i++)all[i].classList.remove('active');
+      op.classList.add('active');stateMutator('selectedFont',ft);renderTextSignature();
+    });
+
+    // Navegação de páginas no posicionador
+    doc.getElementById('page-prev').addEventListener('click',async function(){
+      const cur=stateReader('currentPage');if(cur<=0)return;
+      const pos=stateReader('sigPosition');
+      stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur-1}));
+      await renderizarPagina(cur-1);
+    });
+    doc.getElementById('page-next').addEventListener('click',async function(){
+      const cur=stateReader('currentPage');if(cur>=stateReader('totalPages')-1)return;
+      const pos=stateReader('sigPosition');
+      stateMutator('sigPosition',Object.assign({},pos,{pageIdx:cur+1}));
+      await renderizarPagina(cur+1);
+    });
+    doc.getElementById('sig-size').addEventListener('input',function(e){
+      const pos=stateReader('sigPosition');if(!pos)return;
+      stateMutator('sigPosition',Object.assign({},pos,{widthRatio:parseFloat(e.target.value)}));
+      atualizarOverlay();
+    });
+    doc.getElementById('btn-centralizar').addEventListener('click',function(){
+      const pos=stateReader('sigPosition');if(!pos)return;
+      stateMutator('sigPosition',Object.assign({},pos,{xRatio:.5,yRatio:.5}));
+      atualizarOverlay();
+    });
+    doc.getElementById('btn-rodape').addEventListener('click',function(){
+      const pos=stateReader('sigPosition');if(!pos)return;
+      stateMutator('sigPosition',Object.assign({},pos,{xRatio:.5,yRatio:.85}));
+      atualizarOverlay();
+    });
+
+    doc.getElementById('btn-assinar').addEventListener('click',executarAssinatura);
+    doc.getElementById('link-historico').addEventListener('click',function(e){e.preventDefault();abrirHistorico();});
+    doc.getElementById('btn-fechar-historico').addEventListener('click',fecharHistorico);
+    doc.getElementById('btn-exportar-historico').addEventListener('click',exportarHistorico);
+    doc.getElementById('btn-limpar-historico').addEventListener('click',limparHistorico);
+    doc.getElementById('history-modal').addEventListener('click',function(e){if(e.target.id==='history-modal')fecharHistorico();});
+    doc.getElementById('lgpd-details-link').addEventListener('click',abrirLgpdModal);
+    doc.getElementById('btn-fechar-lgpd').addEventListener('click',fecharLgpdModal);
+    doc.getElementById('lgpd-ack').addEventListener('click',ocultarBanner);
+    doc.getElementById('lgpd-modal').addEventListener('click',function(e){if(e.target.id==='lgpd-modal')fecharLgpdModal();});
+
+    globalScope.addEventListener('resize',function(){setupSigCanvas();renderTextSignature();});
+  }
+
+  function init(){
+    if(!pdfLibRef||!qrcodeRef||!cryptoApi||!cryptoApi.subtle||!pdfjsRef){
+      mostrarStatus('Falha ao carregar dependências. Verifique sua conexão.','error');return;
+    }
+    setupSigCanvas();bindEvents();inicializarBannerLgpd();
+    if(doc.fonts&&doc.fonts.ready)doc.fonts.ready.then(function(){});
+  }
+
+  if(doc.readyState==='loading')doc.addEventListener('DOMContentLoaded',init);
+  else init();
+
+})(window, document, window.crypto, window.PDFLib, window.qrcode, window.pdfjsLib);
+</script>
+</body>
+</html>
