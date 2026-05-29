@@ -674,6 +674,10 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   <button id="lgpd-ack">Entendi</button>
 </div>
 
+<div id="http-warn" style="display:none;background:#B71C1C;color:#fff;padding:10px 16px;font-size:.85rem;font-weight:600;text-align:center;">
+  Atencao: acesso via HTTP detectado. A assinatura requer HTTPS. Troque http:// por https:// no endereco.
+</div>
+
 <main>
 
   <!-- PROGRESS -->
@@ -1018,7 +1022,19 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   const binaryUtils = Object.freeze({
     dataURLtoBytes: function(d){const i=String(d).indexOf(',');if(i<0)throw new Error('DataURL invalida');const b=atob(d.slice(i+1));const a=new Uint8Array(b.length);for(let j=0;j<b.length;j++)a[j]=b.charCodeAt(j);return a;},
     bytesToBase64Utf8: function(s){return btoa(unescape(encodeURIComponent(String(s))));},
-    downloadBytes: function(b,n,m){const bl=new Blob([b],{type:m});const u=URL.createObjectURL(bl);const a=doc.createElement('a');a.href=u;a.download=n;a.rel='noopener noreferrer';doc.body.appendChild(a);a.click();doc.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},1500);}
+    downloadBytes: function(b,n,m){
+      var bl=new Blob([b],{type:m});
+      // IE11 / Edge legado: usa msSaveBlob
+      if(window.navigator&&window.navigator.msSaveBlob){
+        window.navigator.msSaveBlob(bl,n);
+        return;
+      }
+      var u=URL.createObjectURL(bl);
+      var a=doc.createElement('a');
+      a.href=u;a.download=n;a.rel='noopener noreferrer';
+      doc.body.appendChild(a);a.click();doc.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(u);},1500);
+    }
   });
 
   /* ===== ID ===== */
@@ -1458,7 +1474,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       const helvBold=await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const helvOblique=await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
-      // sanitiza texto p/ WinAnsi — Helvetica padrao nao suporta acentos
+      // Sanitiza texto para WinAnsi (Helvetica padrao nao suporta acentos)
       function s(t){
         if(t==null)return '';
         return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,'?');
@@ -1601,6 +1617,10 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       btn.disabled=true;
       mostrarStatus('Processando assinatura...','info');
       try{
+        // Verificar contexto seguro (crypto.subtle exige HTTPS ou localhost)
+        if(!cryptoApi||!cryptoApi.subtle){
+          throw new Error('Assinatura requer HTTPS. Acesse o endereço com https:// (nao http://). Se for GitHub Pages, verifique o link.');
+        }
         const f=lerFormulario();
         if(!stateReader('pdfBuffer'))throw new Error('Nenhum PDF carregado.');
         if(!validators.nome(f.nome))throw new Error('Nome invalido. Informe nome completo.');
@@ -1669,7 +1689,17 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
         // scroll para o status
         doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
       }catch(err){
-        mostrarStatus('Erro: '+(err&&err.message?err.message:'falha desconhecida'),'error');
+        var emsg='falha desconhecida';
+        if(err){
+          if(err.message)emsg=err.message;
+          else if(err.name)emsg=err.name;
+          else if(typeof err==='string')emsg=err;
+          // crypto.subtle ausente (HTTP nao-seguro)
+          if(emsg.indexOf('Cannot read')>=0||emsg.indexOf('undefined')>=0||emsg.indexOf('subtle')>=0){
+            emsg='Crypto nao disponivel. Acesse via HTTPS (nao HTTP). Se estiver no GitHub Pages, use https://.';
+          }
+        }
+        mostrarStatus('Erro: '+emsg,'error');
         doc.getElementById('status').scrollIntoView({behavior:'smooth',block:'center'});
         console.error(err);
       }finally{atualizarBotaoAssinar();}
@@ -1886,8 +1916,13 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   }
 
   function init(){
+    // Avisar sobre HTTP (crypto.subtle nao funciona em HTTP)
+    if(globalScope.location.protocol==='http:'&&globalScope.location.hostname!=='localhost'&&globalScope.location.hostname!=='127.0.0.1'){
+      var hw=doc.getElementById('http-warn');
+      if(hw)hw.style.display='block';
+    }
     if(!pdfLibRef||!qrcodeRef||!cryptoApi||!cryptoApi.subtle||!pdfjsRef){
-      mostrarStatus('Falha ao carregar dependencias. Verifique sua conexao.','error');return;
+      mostrarStatus('Falha ao carregar dependencias. Se estiver em HTTP, mude para HTTPS. Verifique tambem sua conexao.','error');return;
     }
     setupSigCanvas();
     bindEvents();
