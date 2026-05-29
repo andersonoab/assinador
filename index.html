@@ -463,6 +463,32 @@ main { max-width: 680px; margin: 0 auto; padding: 16px 14px 120px; }
 .checkbox-wrap input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; cursor: pointer; accent-color: var(--ok); }
 .checkbox-wrap label { font-size: .85rem; color: var(--text); cursor: pointer; line-height: 1.4; }
 
+
+/* ===== MATRIZ TRABALHISTA ===== */
+.doc-type-panel {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: #FAFAFA;
+  font-size: .82rem;
+}
+.doc-type-panel strong { display:block; color:var(--primary-dark); margin-bottom:4px; }
+.doc-type-panel .risk-line { margin-top:6px; color:var(--muted); }
+.doc-type-panel.risco-alto { border-left-color: var(--warn); background:#FFF8F0; }
+.doc-type-panel.risco-baixo-medio { border-left-color: var(--ok); background:var(--ok-bg); }
+.field select {
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+}
+.field select:focus { outline:none; border-color:var(--primary); }
+
 /* ===== STATUS ===== */
 .status { font-size: .88rem; padding: 10px 14px; border-radius: var(--radius-sm); margin-top: 12px; display: none; }
 .status.show { display: block; }
@@ -761,6 +787,11 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
           <input type="text" id="cargo" maxlength="80" placeholder="Ex.: Analista de Atendimento">
         </div>
       </div>
+      <div class="doc-type-panel security-trail-panel" id="security-trail-panel">
+        <strong>Trilha de seguranca e recomendacao juridica</strong>
+        <div>Este assinador registra evidencias tecnicas de autoria e integridade: hash SHA-256 do PDF original, manifesto embutido no PDF, data e hora, IP quando disponivel, dispositivo, aceite LGPD e aceite de assinatura.</div>
+        <div class="risk-line"><b>Aviso:</b> sempre que o documento tiver alto risco, quitacao, renuncia, acordo sensivel, exigencia sindical, fe publica ou necessidade de prova reforcada, considere assinar tambem com ICP-Brasil ou gov.br.</div>
+      </div>
     </div>
   </div>
 
@@ -876,30 +907,30 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       <div class="aceite-bloco">
         <div class="aceite-resumo lgpd" id="aceite-lgpd-resumo">
           <strong>Tratamento de dados pessoais (LGPD)</strong>
-          Seus dados (nome, CPF, celular, e-mail, cargo, IP e dispositivo) serao embutidos no PDF apenas para fins de formalizar a assinatura eletronica.
+          Seus dados (nome, CPF, celular, e-mail, cargo, IP, dispositivo e evidencias tecnicas) serao embutidos no PDF para formalizar a assinatura eletronica e preservar a trilha de seguranca.
           <button class="aceite-ver-mais" id="btn-ver-lgpd">Ler texto completo</button>
         </div>
         <div class="aceite-expandido" id="aceite-lgpd-full">
-          Ao assinar este documento, autorizo o tratamento dos seguintes dados pessoais: nome completo, CPF, numero de celular, e-mail, cargo, endereco IP, dados do dispositivo (navegador, sistema operacional, resolucao de tela, fuso horario) e imagem da assinatura digitalizada. Finalidade: formalizacao eletronica de documento trabalhista, com producao de prova de autoria e integridade. Bases legais: cumprimento de obrigacao legal e regulatoria pelo controlador (art. 7, II), execucao de contrato (art. 7, V) e exercicio regular de direitos em processo (art. 7, VI) da LGPD. Compartilhamento: os dados ficam embutidos no proprio PDF assinado, que pode ser compartilhado com a area de Recursos Humanos, com orgaos fiscalizadores e em processos administrativos ou judiciais. Retencao: prazo prescricional trabalhista (cinco anos durante o contrato e dois anos apos a rescisao, conforme art. 7, XXIX, CF/88). Direitos do titular: confirmacao, acesso, correcao, anonimizacao, portabilidade e eliminacao, observadas as excecoes legais, mediante solicitacao ao Encarregado de Dados da organizacao.
+          Ao assinar este documento, declaro ciencia de que serao tratados dados pessoais estritamente necessarios a formalizacao e guarda da trilha de seguranca: nome completo, CPF, celular, e-mail, cargo, endereco IP quando disponivel, dados do dispositivo, data/hora, hash do PDF, manifesto tecnico e imagem da assinatura. As bases legais principais sao cumprimento de obrigacao legal/regulatoria, execucao de contrato e exercicio regular de direitos, sem depender exclusivamente de consentimento. O PDF assinado e o manifesto de auditoria poderao ser usados pelo DP/RH, juridico, auditoria, orgaos fiscalizadores ou em processo administrativo/judicial. A retencao deve seguir a politica documental da empresa e os prazos legais aplicaveis ao tipo de documento.
         </div>
         <div class="checkbox-wrap" id="wrap-lgpd">
           <input type="checkbox" id="aceite-lgpd">
-          <label for="aceite-lgpd">Autorizo expressamente o tratamento dos meus dados pessoais nos termos acima.</label>
+          <label for="aceite-lgpd">Declaro ciencia do tratamento dos dados pessoais necessarios para formalizacao, guarda e defesa de direitos relacionados a este documento.</label>
         </div>
       </div>
 
       <div class="aceite-bloco" style="margin-top:12px;">
         <div class="aceite-resumo" id="aceite-assin-resumo">
           <strong>Declaracao de Assinatura Eletronica</strong>
-          Declaro ciencia do conteudo do documento e que esta assinatura tem validade juridica como assinatura eletronica avancada (MP 2.200-2/2001, art. 10, §2o).
+          Declaro ciencia integral do documento e aceito o uso desta assinatura eletronica com evidencias de autoria, integridade e trilha de auditoria. Estou ciente de que documentos de maior risco devem preferencialmente ser assinados por ICP-Brasil ou gov.br.
           <button class="aceite-ver-mais" id="btn-ver-aceite">Ler texto completo</button>
         </div>
         <div class="aceite-expandido" id="aceite-assin-full">
-          Declaro, para todos os fins de direito, que tomei conhecimento integral do conteudo do documento PDF anexado nesta sessao e o assino eletronicamente, com plena ciencia de que esta assinatura, embora nao emitida por certificado ICP-Brasil, constitui assinatura eletronica avancada nos termos do artigo 10, paragr. 2, da MP 2.200-2/2001, com identificacao inequivoca do signatario, integridade do documento garantida por funcao criptografica de resumo (SHA-256) e registro de trilha de auditoria (data, hora, equipamento, IP). Reconheco a validade juridica do presente ato e dispenso a formalizacao por meio fisico.
+          Declaro, para todos os fins de direito, que visualizei o PDF anexado nesta sessao, conferi seus dados essenciais e assino eletronicamente de forma voluntaria. Reconheco que o ato gera evidencias tecnicas de autoria e integridade, incluindo identificacao do signatario, data e hora, IP, dispositivo, hash SHA-256 do documento e manifesto de auditoria. As partes reconhecem este meio de assinatura para documento particular, nos termos do art. 10, paragr. 2, da MP 2.200-2/2001, sem prejuizo do uso de assinatura qualificada/ICP-Brasil quando exigida por lei, norma interna, CCT/ACT ou pela natureza do documento.
         </div>
         <div class="checkbox-wrap" id="wrap-assinatura">
           <input type="checkbox" id="aceite-assinatura">
-          <label for="aceite-assinatura">Li, compreendi e aceito o termo. Sou a pessoa identificada no passo 2 e assino voluntariamente.</label>
+          <label for="aceite-assinatura">Li, compreendi, conferi o documento e assino voluntariamente. Confirmo ser a pessoa identificada no passo 2.</label>
         </div>
       </div>
       <div class="status" id="status"></div>
@@ -907,7 +938,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   </div>
 
   <div class="legal">
-    <strong>Validade juridica.</strong> Assinatura eletronica avancada (nao qualificada), valida nos termos do art. 10, §2o, da MP 2.200-2/2001 e da Lei 14.063/2020. Para atos que exijam fe publica ou certificacao qualificada, utilize certificado ICP-Brasil.
+    <strong>Uso juridico no DP.</strong> Esta ferramenta gera assinatura eletronica com evidencias tecnicas de autoria, integridade e trilha de auditoria para documentos gerais de DP, ferias, banco de horas e rotinas trabalhistas. <strong>Aviso:</strong> sempre considere ICP-Brasil ou gov.br para documentos de maior risco, quitacao, renuncia, transacao, exigencia sindical, fe publica ou necessidade de prova reforcada.
   </div>
 
 </main>
@@ -958,13 +989,20 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
 
   /* ===== CONFIG ===== */
   const CONFIG = Object.freeze({
-    versao: '3.0',
+    versao: '4.1-DP-Trilha-Seguranca',
     storageKey: 'asn_hist_v2',
     storageLgpdKey: 'asn_lgpd_ack_v2',
     maxFileSize: 20 * 1024 * 1024,
     maxNomeLen: 100, maxEmailLen: 100, maxCargoLen: 80, maxSigTextLen: 60,
     pdfMagic: Object.freeze([0x25, 0x50, 0x44, 0x46, 0x2D]),
     fontsEnum: Object.freeze(['Dancing Script', 'Great Vibes', 'Caveat']),
+    trilhaSegurancaPadrao: Object.freeze({
+      versao:'TRILHA-SEGURANCA-DP-1.0',
+      escopo:'Documentos gerais de DP, ferias, banco de horas e rotinas trabalhistas',
+      evidencias:['Hash SHA-256 do PDF original','Hash SHA-256 do PDF assinado','Manifesto JSON embutido no PDF','Data e hora da assinatura','IP publico quando disponivel','User-agent e dados tecnicos do dispositivo','Aceite LGPD','Aceite de assinatura','Posicao visual da assinatura no PDF'],
+      aviso:'Considere sempre ICP-Brasil ou gov.br para documentos de maior risco, quitacao, renuncia, transacao, exigencia sindical, fe publica ou necessidade de prova reforcada.',
+      fundamentoLegal:'MP 2.200-2/2001, art. 10, paragr. 2; Lei 14.063/2020; LGPD 13.709/2018, art. 7, II, V e VI'
+    }),
     cores: Object.freeze({
       primary:[0,.514,.792], primaryDark:[0,.235,.392], text:[.2,.2,.2],
       muted:[.4,.4,.4], lightBg:[.96,.97,.98], lgpd:[.29,.078,.549]
@@ -1390,6 +1428,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
   }
 
   /* ===== FORM ===== */
+
   function lerFormulario(){
     return {
       nome:doc.getElementById('nome').value.trim().slice(0,CONFIG.maxNomeLen),
@@ -1542,7 +1581,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
 
       page.drawRectangle({x:0,y:height-70,width:width,height:70,color:primary});
       page.drawText('CERTIFICADO DE ASSINATURA ELETRONICA',{x:40,y:height-38,size:16,font:helvBold,color:white});
-      page.drawText('Documento assinado nos termos da MP 2.200-2/2001 e da Lei 14.063/2020',{x:40,y:height-58,size:8.5,font:helv,color:white});
+      page.drawText('Documento particular assinado com evidencias tecnicas de autoria e integridade',{x:40,y:height-58,size:8.5,font:helv,color:white});
 
       page.drawRectangle({x:width-165,y:height-220,width:130,height:80,borderColor:primary,borderWidth:2,color:white});
       page.drawText('ASSINADO',{x:width-156,y:height-175,size:16,font:helvBold,color:primary});
@@ -1550,14 +1589,16 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       page.drawText(fmtData(new Date(manifesto.timestampISO)),{x:width-156,y:height-208,size:7,font:helv,color:muted});
 
       let y=height-110;
-      page.drawText('DADOS DO SIGNATARIO',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
+      page.drawText('DADOS DO SIGNATARIO E CLASSIFICACAO DP',{x:40,y:y,size:10,font:helvBold,color:primaryDark});
       y-=6;page.drawLine({start:{x:40,y:y},end:{x:width-180,y:y},color:primary,thickness:1.5});y-=18;
       const campos=[
         ['Nome:',s(manifesto.signatario.nome)],
         ['CPF:',s(manifesto.signatario.cpf)],
         ['Celular:',s(manifesto.signatario.celular)],
         ['Cargo:',s(manifesto.signatario.cargo||'-')],
-        ['E-mail:',s(manifesto.signatario.email||'-')]
+        ['E-mail:',s(manifesto.signatario.email||'-')],
+        ['Trilha de seguranca:',s((manifesto.seguranca&&manifesto.seguranca.versao)||'TRILHA-SEGURANCA-DP')],
+        ['Aviso:',s((manifesto.seguranca&&manifesto.seguranca.aviso)||'Considere ICP-Brasil ou gov.br para documentos de maior risco.')]
       ];
       for(let i=0;i<campos.length;i++){
         page.drawText(campos[i][0],{x:40,y:y,size:9,font:helvBold,color:muted});
@@ -1608,16 +1649,16 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
       const linhasLgpd=quebrar(lgpdResumo,95);
       for(let i=0;i<linhasLgpd.length;i++){page.drawText(linhasLgpd[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
       y-=6;page.drawText('TERMO DE ACEITE CONFIRMADO',{x:40,y:y,size:9,font:helvBold,color:primaryDark});y-=12;
-      const aceiteResumo='Signatario declarou ciencia integral do conteudo do documento, identificou-se conforme dados acima e firmou assinatura eletronica avancada, dispensando formalizacao fisica.';
+      const aceiteResumo='Signatario declarou ciencia integral do conteudo do documento, confirmou sua identificacao, aceitou a assinatura eletronica com evidencias de autoria e integridade e concordou com a classificacao documental indicada para uso no DP.';
       const linhasAceite=quebrar(aceiteResumo,95);
       for(let i=0;i<linhasAceite.length;i++){page.drawText(linhasAceite[i],{x:40,y:y,size:7.5,font:helv,color:textColor});y-=10;}
 
       page.drawRectangle({x:0,y:0,width:width,height:35,color:primaryDark});
-      page.drawText('Fundamento legal: MP 2.200-2/2001, art. 10, paragr.2 - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
-      page.drawText('Assinatura eletronica avancada (nao qualificada ICP-Brasil) - Documento autocontido',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
+      page.drawText('Fundamento: MP 2.200-2/2001, art. 10, paragr.2 - Lei 14.063/2020 - LGPD 13.709/2018',{x:40,y:19,size:8,font:helv,color:white});
+      page.drawText('Assinatura eletronica com trilha de seguranca - Considere ICP-Brasil ou gov.br para maior risco',{x:40,y:8,size:7,font:helvOblique,color:rgb(.85,.85,.85)});
 
       pdfDoc.setTitle(s('Documento Assinado Eletronicamente - '+manifesto.signatario.nome));
-      pdfDoc.setSubject('Assinatura eletronica avancada - ID '+manifesto.idAssinatura);
+      pdfDoc.setSubject('Assinatura eletronica com evidencias DP - ID '+manifesto.idAssinatura);
       pdfDoc.setAuthor(s(manifesto.signatario.nome));
       pdfDoc.setProducer('Assinador Eletronico v'+CONFIG.versao);
       pdfDoc.setCreator('Assinador Eletronico v'+CONFIG.versao);
@@ -1626,6 +1667,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
         'ID:'+manifesto.idAssinatura,
         'HASH_ORIGINAL:'+manifesto.documento.hashSHA256Original,
         'CARIMBO_POSICAO:0',
+        'TRILHA_SEGURANCA:'+(((manifesto.seguranca||{}).versao)||'TRILHA-SEGURANCA-DP'),
         'MANIFESTO_B64:'+b64Utf8(JSON.stringify(manifesto))
       ]);
       return await pdfDoc.save();
@@ -1665,7 +1707,6 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
         const userAgent=String(navigator.userAgent||'N/D').slice(0,250);
         const fusoHorario=Intl.DateTimeFormat().resolvedOptions().timeZone||'N/D';
         const sigPos=stateReader('sigPosition');
-
         const manifesto={
           versao:CONFIG.versao,
           idAssinatura:idAssinatura,
@@ -1676,6 +1717,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
             tamanhoBytes:stateReader('pdfSize'),
             hashSHA256Original:stateReader('pdfHashOriginal')
           },
+          seguranca:Object.assign({},CONFIG.trilhaSegurancaPadrao),
           signatario:{
             nome:f.nome,
             cpf:helpers.mascararCPF(cpfNumeros),
@@ -1699,8 +1741,11 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
           aceite:{
             confirmadoAssinatura:true,
             confirmadoLgpd:true,
+            confirmouLeituraDocumento:true,
             timestampAceite:agora.toISOString(),
-            fundamentoLegal:'MP 2.200-2/2001, art. 10, paragr.2; Lei 14.063/2020; LGPD 13.709/2018, art. 7, II, V, VI'
+            textoAssinatura:'Li, compreendi, conferi o documento e assino voluntariamente. Confirmo ser a pessoa identificada.',
+            fundamentoLegal:'MP 2.200-2/2001, art. 10, paragr.2; Lei 14.063/2020; LGPD 13.709/2018, art. 7, II, V, VI',
+            observacaoJuridica:'Assinatura eletronica com evidencias de autoria, integridade e trilha de seguranca. Considere sempre ICP-Brasil ou gov.br para documentos de maior risco.'
           }
         };
 
@@ -1729,7 +1774,7 @@ table th { background: var(--bg-soft); color: var(--muted); font-weight: 600; fo
     try{
       const raw=localStorage.getItem(CONFIG.storageKey)||'[]';
       const p=JSON.parse(raw);const lista=Array.isArray(p)?p:[];
-      lista.unshift({id:m.idAssinatura,nome:m.signatario.nome,cpf:m.signatario.cpf,celular:m.signatario.celular,documento:m.documento.nomeOriginal,timestamp:m.timestampISO,hash:m.documento.hashSHA256Original});
+      lista.unshift({id:m.idAssinatura,nome:m.signatario.nome,cpf:m.signatario.cpf,celular:m.signatario.celular,documento:m.documento.nomeOriginal,tipo:'Documento geral DP',risco:'Conforme conteudo do documento',timestamp:m.timestampISO,hash:m.documento.hashSHA256Original});
       if(lista.length>200)lista.length=200;
       localStorage.setItem(CONFIG.storageKey,JSON.stringify(lista));
     }catch(e){console.warn('hist:',e);}

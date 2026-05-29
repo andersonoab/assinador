@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'none';">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
-<title>Verificador de Assinatura Eletrônica</title>
+<title>Verificador de Assinatura Eletrônica - Trilha de Segurança</title>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
   :root{--primary:#0083CA;--primary-dark:#003C64;--text:#333;--muted:#646464;--border:#CCC;--bg:#FFF;--bg-soft:#F5F7FA;--ok:#2E7D32;--warn:#E65100;--danger:#C62828;--lgpd:#4A148C}
@@ -43,6 +43,10 @@
   .check-text{flex:1;font-size:.9rem}
   .check-text strong{display:block;margin-bottom:2px}
   .check-text small{color:var(--muted)}
+  .risk-box{padding:12px 14px;border-radius:4px;border-left:4px solid var(--primary);background:#F7FBFE;margin:12px 0 16px;font-size:.88rem}
+  .risk-box.alto{border-left-color:var(--warn);background:#FFF3E0}
+  .risk-box.baixo{border-left-color:var(--ok);background:#E8F5E9}
+  .risk-box strong{display:block;margin-bottom:4px}
   .legal{margin-top:24px;padding:16px 20px;background:#FAFAFA;border:1px solid var(--border);border-radius:4px;font-size:.8rem;color:var(--muted);line-height:1.6}
   .legal strong{color:var(--text)}
   .lgpd-notice{padding:12px 16px;background:#F3E5F5;border-left:4px solid var(--lgpd);border-radius:4px;font-size:.85rem;color:var(--text);margin-bottom:20px}
@@ -57,14 +61,14 @@
 
 <header>
   <h1>Verificador de Assinatura Eletrônica</h1>
-  <a href="index.html">Voltar ao assinador</a>
+  <a href="assinador_dp_trabalhista.html">Voltar ao assinador</a>
 </header>
 
 <main>
 
   <div class="lgpd-notice">
     <strong>Aviso LGPD</strong>
-    Este verificador exibe dados pessoais do signatário contidos no PDF (nome, CPF mascarado, celular, e-mail, cargo, IP). Trate essas informações com a confidencialidade exigida pela Lei 13.709/2018. O processamento é local no seu navegador, sem envio para servidores.
+    Este verificador exibe dados pessoais e evidências técnicas do documento (nome, CPF mascarado, celular, e-mail, cargo, IP, dispositivo, hash e manifesto). Trate essas informações com a confidencialidade exigida pela Lei 13.709/2018. O processamento é local no seu navegador, sem envio para servidores.
   </div>
 
   <div class="card">
@@ -81,7 +85,7 @@
   <div id="resultado" style="display:none;"></div>
 
   <div class="legal">
-    <strong>Como a verificação funciona.</strong> O verificador lê os metadados embutidos no PDF assinado, extrai o manifesto da assinatura (base64) e executa cinco conferências: presença do manifesto, estrutura dos campos obrigatórios, formato do hash SHA-256, coerência do timestamp e identificação do signatário. A análise é 100% local no seu navegador, sem envio para servidores. Não substitui análise jurídica de validade. Para atos com fé pública exigida em lei, utilize certificado ICP-Brasil.
+    <strong>Como a verificação funciona.</strong> O verificador lê os metadados embutidos no PDF assinado, extrai o manifesto da assinatura (base64) e executa conferências de presença do manifesto, estrutura, hash SHA-256, timestamp, aceite, LGPD, identificação do signatário e trilha de segurança. A análise é 100% local no navegador, sem envio para servidores. Não substitui análise jurídica. Para documentos de maior risco, quitação, renúncia, exigência sindical, fé pública ou necessidade de prova reforçada, considere sempre ICP-Brasil ou gov.br.
   </div>
 
 </main>
@@ -173,6 +177,13 @@
       const sigOk=manifesto.signatario&&manifesto.signatario.nome&&manifesto.signatario.cpf;
       checks.push({ok:sigOk,label:'Identificação do signatário',desc:sigOk?'Nome e CPF presentes no manifesto':'Identificação incompleta'});
 
+      const trilha=manifesto.seguranca||{};
+      const trilhaOk=!!(trilha.versao||manifesto.evidencias);
+      checks.push({ok:trilhaOk,label:'Trilha de segurança',desc:trilhaOk?('Evidências técnicas registradas: hash, manifesto, timestamp, IP/dispositivo quando disponíveis e aceite.'):'Documento gerado em versão anterior ou sem trilha de segurança estruturada'});
+
+      const leituraOk=manifesto.aceite&&manifesto.aceite.confirmouLeituraDocumento===true;
+      checks.push({ok:leituraOk,label:'Confirmação de leitura/conferência',desc:leituraOk?'Signatário confirmou leitura e conferência do documento':'Campo não registrado; tratar como evidência reduzida'});
+
       const criticosOk=okEstrut&&hashOk&&tsOk&&aceiteOk&&sigOk;
       const todosOk=criticosOk&&lgpdOk;
       renderResultado({
@@ -222,6 +233,12 @@
       const card=document.createElement('div');card.className='card';
       const h2=document.createElement('h2');h2.textContent='Dados da assinatura';
       card.appendChild(h2);
+      const trilha=m.seguranca||{};
+      const rb=document.createElement('div');
+      rb.className='risk-box alto';
+      const st=document.createElement('strong');st.textContent='Aviso jurídico de cautela';
+      const tx=document.createElement('div');tx.textContent=trilha.aviso||'Considere sempre ICP-Brasil ou gov.br para documentos de maior risco, quitação, renúncia, transação, exigência sindical, fé pública ou necessidade de prova reforçada.';
+      rb.appendChild(st);rb.appendChild(tx);card.appendChild(rb);
       const g=document.createElement('div');g.className='info-grid';
 
       function row(lbl,val,isCode){
@@ -241,6 +258,7 @@
       if(m.signatario.email)row('E-mail',m.signatario.email);
       if(m.signatario.posicaoPagina)row('Página da assinatura',String(m.signatario.posicaoPagina));
       row('Documento original',m.documento.nomeOriginal);
+      if(m.seguranca){row('Versão da trilha',m.seguranca.versao||'-');row('Escopo',m.seguranca.escopo||'-');row('Aviso ICP/gov.br',m.seguranca.aviso||'-');}
       row('Hash SHA-256 (original)',m.documento.hashSHA256Original,true);
       row('IP no momento',m.evidencias.ip);
       row('Dispositivo',m.evidencias.userAgent);
@@ -249,7 +267,7 @@
       card.appendChild(g);
 
       const ar=document.createElement('div');ar.className='actions-row';
-      const btn=document.createElement('button');btn.className='btn-ghost';btn.textContent='Exportar manifesto JSON';
+      const btn=document.createElement('button');btn.className='btn-ghost';btn.textContent='Exportar manifesto JSON / evidência';
       btn.addEventListener('click',function(){exportarManifesto(m);});
       ar.appendChild(btn);card.appendChild(ar);
       resultado.appendChild(card);
